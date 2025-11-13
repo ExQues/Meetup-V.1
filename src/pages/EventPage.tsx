@@ -1,7 +1,62 @@
 import { Calendar, Clock, Wifi, Users, Zap, Star, ArrowRight, Sparkles, Code, Terminal, Monitor, Square } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { BackgroundBeams } from '@/components/ui/background-beams'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, FC, ReactNode } from 'react'
+import { Card } from '@/components/ui/card'
+
+interface ComponentProps {
+  title: string
+  description: string[]
+  icon?: ReactNode
+}
+
+const Component: FC<ComponentProps> = ({ title, description, icon }) => {
+  return (
+    <div className="group cursor-pointer transition-all duration-300">
+      <Card className="text-white rounded-2xl border border-white/10 bg-gradient-to-br from-[#010101] via-[#090909] to-[#010101] shadow-2xl relative overflow-hidden hover:border-white/25 hover:shadow-white/5 hover:shadow-3xl w-full h-full min-h-[360px] md:min-h-[380px] flex flex-col">
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-white/10 opacity-30 group-hover:opacity-40 transition-opacity duration-300"></div>
+          <div className="absolute -bottom-20 -left-20 w-48 h-48 rounded-full bg-gradient-to-tr from-white/10 to-transparent blur-3xl opacity-30 group-hover:opacity-50 transform group-hover:scale-110 transition-all duration-700 animate-bounce"></div>
+          <div className="absolute top-10 left-10 w-16 h-16 rounded-full bg-white/5 blur-xl animate-ping"></div>
+          <div className="absolute bottom-16 right-16 w-12 h-12 rounded-full bg-white/5 blur-lg animate-ping"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-200%] transition-transform duration-1000"></div>
+        </div>
+        <div className="p-8 relative z-10 flex flex-col items-center text-center flex-1">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 rounded-full border-2 border-white/20 animate-ping"></div>
+            <div className="absolute inset-0 rounded-full border border-white/10 animate-pulse"></div>
+            <div className="p-6 rounded-full backdrop-blur-lg border border-white/20 bg-gradient-to-br from-black/80 to-black/60 shadow-2xl transform group-hover:rotate-12 group-hover:scale-110 transition-all duration-500 hover:shadow-white/20">
+              <div className="transform group-hover:rotate-180 transition-transform duration-700">
+                {icon}
+              </div>
+            </div>
+          </div>
+          <h3 className="mb-4 text-3xl font-bold bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent animate-pulse transform group-hover:scale-105 transition-transform duration-300">
+            {title}
+          </h3>
+          <div className="space-y-1 max-w-sm">
+            {description.map((line, idx) => (
+              <p
+                key={idx}
+                className="text-gray-300 text-sm leading-relaxed transform group-hover:text-gray-200 transition-colors duration-300"
+              >
+                {line}
+              </p>
+            ))}
+          </div>
+          <div className="mt-6 w-1/3 h-0.5 bg-gradient-to-r from-transparent via-white to-transparent rounded-full transform group-hover:w-1/2 group-hover:h-1 transition-all duration-500 animate-pulse"></div>
+          <div className="flex space-x-2 mt-4 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
+        </div>
+        <div className="absolute top-0 left-0 w-20 h-20 bg-gradient-to-br from-white/10 to-transparent rounded-br-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="absolute bottom-0 right-0 w-20 h-20 bg-gradient-to-tl from-white/10 to-transparent rounded-tl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      </Card>
+    </div>
+  )
+}
 
 export default function EventPage() {
   const glowRef = useRef<HTMLDivElement>(null)
@@ -66,7 +121,7 @@ export default function EventPage() {
       </section>
 
       {/* All Black Features Section with 3D effects */}
-      <section className="py-20 bg-black">
+      <section className="py-16 bg-black">
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
@@ -81,103 +136,93 @@ export default function EventPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch auto-rows-fr">
               {/* Black Feature 1 with hover effect */}
               <motion.div className="relative group p-[2px] rounded-2xl bg-gradient-to-b from-white/8 to-transparent hover:from-white/12 transition-all duration-500 h-full" initial={{opacity:0, y:18}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6}}>
-                <div className="relative bg-[#0a0a0a] rounded-2xl p-8 ring-1 ring-gray-800/60 shadow-lg shadow-black/50 group-hover:-translate-y-2 group-hover:shadow-black/70 transition-all duration-500 h-full flex flex-col">
-                  <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.06),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="relative z-10 flex flex-col flex-1">
-                    <div className="w-16 h-16 bg-black rounded-xl flex items-center justify-center mb-6 border border-gray-800 group-hover:border-gray-600 group-hover:scale-110 transition-all duration-300">
-                      <Code className="w-8 h-8 text-gray-400 group-hover:text-white transition-colors" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-gray-200 transition-colors">Códigos PRO & Premiações</h3>
-                    <p className="text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors mt-auto">Durante a live, os participantes poderão receber códigos exclusivos TRAE PRO, garantindo acesso gratuito e completo por tempo limitado. Além disso, haverá outras premiações surpresa ao longo do evento.</p>
-                  </div>
-                </div>
+                <Component
+                  title="Códigos PRO & Premiações"
+                  description={[
+                    'Durante a live, os participantes poderão receber códigos exclusivos TRAE PRO, garantindo acesso gratuito e completo por tempo limitado.',
+                    'Além disso, haverá outras premiações surpresa ao longo do evento.'
+                  ]}
+                  icon={<Code className="w-8 h-8 text-gray-300" />}
+                />
               </motion.div>
               
               {/* Black Feature 2 */}
               <motion.div className="relative group p-[2px] rounded-2xl bg-gradient-to-b from-white/8 to-transparent hover:from-white/12 transition-all duration-500 h-full" initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6, delay:0.05}}>
-                <div className="relative bg-[#0a0a0a] rounded-2xl p-8 ring-1 ring-gray-800/60 shadow-lg shadow-black/50 group-hover:-translate-y-2 group-hover:shadow-black/70 transition-all duration-500 h-full flex flex-col">
-                  <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.06),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="relative z-10 flex flex-col flex-1">
-                    <div className="w-16 h-16 bg-black rounded-xl flex items-center justify-center mb-6 border border-gray-800 group-hover:border-gray-600 group-hover:scale-110 transition-all duration-300">
-                      <Users className="w-8 h-8 text-gray-400 group-hover:text-white transition-colors" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-gray-200 transition-colors">Comunidade & Conexões</h3>
-                    <p className="text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors mt-auto">Conecte-se com criadores, desenvolvedores e entusiastas de IA em todo o Brasil. Troque ideias, compartilhe projetos e faça parte da comunidade que está moldando o futuro da inteligência artificial.</p>
-                  </div>
-                </div>
+                <Component
+                  title="Comunidade & Conexões"
+                  description={[
+                    'Conecte-se com criadores, desenvolvedores e entusiastas de IA em todo o Brasil.',
+                    'Troque ideias, compartilhe projetos e faça parte da comunidade que está moldando o futuro da inteligência artificial.'
+                  ]}
+                  icon={<Users className="w-8 h-8 text-gray-300" />}
+                />
               </motion.div>
               
               {/* Black Feature 3 */}
               <motion.div className="relative group p-[2px] rounded-2xl bg-gradient-to-b from-white/8 to-transparent hover:from-white/12 transition-all duration-500 h-full" initial={{opacity:0, y:22}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6, delay:0.1}}>
-                <div className="relative bg-[#0a0a0a] rounded-2xl p-8 ring-1 ring-gray-800/60 shadow-lg shadow-black/50 group-hover:-translate-y-2 group-hover:shadow-black/70 transition-all duration-500 h-full flex flex-col">
-                  <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.06),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="relative z-10 flex flex-col flex-1">
-                    <div className="w-16 h-16 bg-black rounded-xl flex items-center justify-center mb-6 border border-gray-800 group-hover:border-gray-600 group-hover:scale-110 transition-all duration-300">
-                      <Terminal className="w-8 h-8 text-gray-400 group-hover:text-white transition-colors" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-gray-200 transition-colors">Próximos Eventos e Desafios</h3>
-                    <p className="text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors mt-auto">Descubra o que vem a seguir no ecossistema TRAE Brasil — mais colaborações, desafios e oportunidades únicas pra quem quer liderar a nova era da IA.</p>
-                  </div>
-                </div>
+                <Component
+                  title="Próximos Eventos e Desafios"
+                  description={[
+                    'Descubra o que vem a seguir no ecossistema TRAE Brasil — mais colaborações, desafios e oportunidades únicas pra quem quer liderar a nova era da IA.'
+                  ]}
+                  icon={<Terminal className="w-8 h-8 text-gray-300" />}
+                />
+              </motion.div>
+            </div>
+            <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch auto-rows-fr">
+              <motion.div className="relative group p-[2px] rounded-2xl bg-gradient-to-b from-white/8 to-transparent hover:from-white/12 transition-all duration-500 h-full" initial={{opacity:0, y:18}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6}}>
+                <Component title="Data" description={[ '23 de novembro de 2025' ]} icon={<Calendar className="w-8 h-8 text-gray-300" />} />
+              </motion.div>
+              <motion.div className="relative group p-[2px] rounded-2xl bg-gradient-to-b from-white/8 to-transparent hover:from-white/12 transition-all duration-500 h-full" initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6, delay:0.05}}>
+                <Component title="Formato" description={[ 'Online e gratuito' ]} icon={<Wifi className="w-8 h-8 text-gray-300" />} />
+              </motion.div>
+              <motion.div className="relative group p-[2px] rounded-2xl bg-gradient-to-b from-white/8 to-transparent hover:from-white/12 transition-all duration-500 h-full" initial={{opacity:0, y:22}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6, delay:0.1}}>
+                <Component title="Participação" description={[ 'Não perca esta oportunidade única de ver o TRAE SOLO em ação.', 'Faça parte da comunidade que está revolucionando o desenvolvimento com IA.' ]} icon={<Sparkles className="w-8 h-8 text-gray-300" />} />
               </motion.div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* All Black Event Details Section with premium effects */}
-      <section className="py-20 bg-black">
+
+
+      <section className="py-16 bg-black">
         <div className="container mx-auto px-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="relative group p-[2px] rounded-3xl bg-gradient-to-b from-gray-300/10 to-transparent">
-              <motion.div className="relative overflow-hidden rounded-3xl p-8 md:p-12 border border-gray-800/60 bg-black/40 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:shadow-black/40" initial={{opacity:0, scale:0.98}} whileInView={{opacity:1, scale:1}} viewport={{once:true, amount:0.15}} transition={{duration:0.5}}>
-                <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-6 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(255,255,255,0.06),transparent_60%)]"></div>
-                <div className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-                  📅 Detalhes do Evento
-                </h2>
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+            <motion.div initial={{opacity:0, y:18}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6}}>
+              <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Sobre o Helio</h2>
+              <p className="text-lg text-gray-400 mb-4">
+                Helio é o host da demonstração TRAE SOLO, focado em mostrar como transformar ideias em produtos reais com velocidade e qualidade.
+                Sua abordagem prática conecta ferramentas inteligentes a fluxos de trabalho modernos para criar experiências completas.
+              </p>
+              <p className="text-lg text-gray-400">
+                Nesta live, ele conduz a jornada de forma clara e objetiva, explorando integrações, automações e boas práticas que elevam o nível de qualquer projeto.
+              </p>
+              <motion.a href="https://luma.com/d2kocb6e" target="_blank" rel="noopener noreferrer" className="mt-6 group relative inline-flex items-center bg-black border border-gray-700 hover:border-gray-500 text-white px-10 py-5 rounded-xl text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] overflow-hidden" initial={{opacity:0, y:10}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.5, delay:0.05}}>
+                <span className="flex items-center relative z-10">Registrar-se no Luma <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" /></span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              </motion.a>
+            </motion.div>
+            <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6, delay:0.05}}>
+              <div className="relative group p-[2px] rounded-3xl bg-gradient-to-b from-white/8 to-transparent">
+                <div className="relative rounded-3xl overflow-hidden border border-gray-800/60 bg-black">
+                  <img
+                    src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=800&auto=format&fit=crop"
+                    alt="Foto do apresentador"
+                    className="w-full h-[340px] md:h-[460px] object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none"></div>
+                </div>
               </div>
-              
-              <div className="grid md:grid-cols-2 gap-12 mb-12">
-                <motion.div className="text-center group" initial={{opacity:0, y:18}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6}}>
-                  <div className="w-20 h-20 bg-black rounded-2xl flex items-center justify-center mx-auto mb-6 border border-gray-800 group-hover:border-gray-600 group-hover:scale-105 transition-all duration-300">
-                    <Calendar className="w-10 h-10 text-gray-400 group-hover:text-white transition-colors" />
-                  </div>
-                  <h3 className="text-2xl font-semibold text-white mb-3">Data</h3>
-                  <p className="text-xl text-gray-500 font-medium group-hover:text-gray-400 transition-colors">23 de novembro de 2025</p>
-                </motion.div>
-                
-                <motion.div className="text-center group" initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6, delay:0.05}}>
-                  <div className="w-20 h-20 bg-black rounded-2xl flex items-center justify-center mx-auto mb-6 border border-gray-800 group-hover:border-gray-600 group-hover:scale-105 transition-all duration-300">
-                  <Wifi className="w-10 h-10 text-gray-400 group-hover:text-white transition-colors" />
-                  </div>
-                  <h3 className="text-2xl font-semibold text-white mb-3">Formato</h3>
-                  <p className="text-xl text-gray-500 font-medium group-hover:text-gray-400 transition-colors">Online e gratuito</p>
-                </motion.div>
-              </div>
-              
-              <div className="text-center">
-                <p className="text-xl text-gray-500 mb-8 leading-relaxed">
-                  Não perca esta oportunidade única de ver o TRAE SOLO em ação e fazer parte da comunidade que está revolucionando o desenvolvimento com IA.
-                </p>
-                
-                <motion.a href="https://luma.com/d2kocb6e" target="_blank" rel="noopener noreferrer" className="group relative inline-flex items-center bg-black border border-gray-700 hover:border-gray-500 text-white px-12 py-6 rounded-2xl text-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.1)] overflow-hidden" initial={{opacity:0, y:22}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6, delay:0.05}}>
-                  <span className="flex items-center relative z-10">
-                    Registrar-se Agora
-                    <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-2 transition-transform" />
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                </motion.a>
-              </div>
-              </motion.div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* All Black Footer with enhanced effects */}
-      <footer className="bg-black text-white py-16 border-t border-gray-900">
+      <footer className="relative bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] text-white py-20 border-t border-gray-800">
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <motion.div className="mb-8" initial={{opacity:0, y:16}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6}}>
@@ -187,12 +232,6 @@ export default function EventPage() {
               <p className="text-xl text-gray-500 mb-8">
                 Transformando ideias em realidade com inteligência artificial
               </p>
-            </motion.div>
-            
-            
-            
-            <motion.div className="border-t border-gray-900 pt-8" initial={{opacity:0}} whileInView={{opacity:1}} viewport={{once:true}} transition={{duration:0.6, delay:0.1}}>
-              <span className="text-gray-600">© 2025 TRAE SOLO. Todos os direitos reservados.</span>
             </motion.div>
           </div>
         </div>
