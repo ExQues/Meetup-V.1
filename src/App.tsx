@@ -86,7 +86,7 @@ function Dock({
           mouseX.set(Infinity);
         }}
         className={cn(
-          "mx-auto flex w-fit items-center gap-4 rounded-2xl bg-gray-50 px-4 dark:bg-neutral-900",
+          "mx-auto flex w-fit items-center gap-4 rounded-2xl px-4",
           className
         )}
         style={{ height: panelHeight }}
@@ -191,8 +191,8 @@ function DockIcon({ children, className, ...rest }: DockIconProps) {
 export default function App() {
   return (
     <Router>
-      <header className="fixed top-8 left-0 right-0 z-50">
-        <div className="flex justify-center px-6 mt-2">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black">
+        <div className="flex justify-center px-6">
           <Dock className="bg-black/40 border border-white/10 backdrop-blur-sm" panelHeight={48} magnification={64} distance={120}>
             <Link to="/" className="contents">
               <DockItem>
@@ -221,7 +221,7 @@ export default function App() {
           </Dock>
         </div>
       </header>
-      <div className="pt-24">
+      <div className="pt-16">
         <Routes>
           <Route path="/" element={<EventPage />} />
           <Route path="/formulário" element={<Formulario />} />
