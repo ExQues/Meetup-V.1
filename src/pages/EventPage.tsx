@@ -1,4 +1,4 @@
-import { Calendar, Clock, Wifi, Users, Zap, Star, ArrowRight, Sparkles, Code, Terminal, Monitor, Square } from 'lucide-react'
+import { Calendar, Clock, Wifi, Users, Zap, Star, ArrowRight, Sparkles, Code, Terminal, Square } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { BackgroundBeams } from '@/components/ui/background-beams'
 import { useEffect, useRef, FC, ReactNode } from 'react'
@@ -67,27 +67,23 @@ export default function EventPage() {
   return (
     <div className="min-h-screen bg-black">
       {/* Dark Hero Section - All Black with Subtle Effects */}
-      <section ref={sectionRef} className="bg-black text-white relative overflow-hidden">
+      <section id="hero" ref={sectionRef} className="bg-black text-white relative overflow-hidden">
         <BackgroundBeams color="#32F08C" visible={14} />
         
         <div className="container mx-auto px-6 py-24 md:py-32 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <motion.div className="mb-8" initial={{opacity:0, y:12}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6}}>
-              <div className="inline-flex items-center px-6 py-3 bg-black border border-gray-800 rounded-full text-sm font-medium hover:border-gray-600 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                <Monitor className="w-4 h-4 mr-2 text-gray-500" />
-                <span className="text-gray-300 font-semibold">
-                  Evento Online & Gratuito
-                </span>
-              </div>
-            </motion.div>
+          <div className="relative group max-w-4xl mx-auto text-center">
+            
             
             <motion.div className="mb-8" initial={{opacity:0, y:14}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.7, delay:0.05}}>
-              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight mb-2">
-                <span className="block text-white">Demonstração e Live Demo</span>
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight mb-2 bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(255,255,255,0.06)]">
+                <motion.span className="inline-block" initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.45, delay:0.05}}>Demonstração</motion.span>
+                <motion.span className="inline-block mx-2" initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.45, delay:0.1}}>e</motion.span>
+                <motion.span className="inline-block" initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.45, delay:0.15}}>Live</motion.span>
+                <motion.span className="inline-block ml-2" initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.45, delay:0.2}}>Demo</motion.span>
               </h1>
               <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold mb-6">
-                <span className="text-[#32F08C]">TRAE SOLO</span>
-                <span className="text-gray-300"> em ação</span>
+                <span className="relative inline-block px-1 text-[#32F08C] before:content-[''] before:absolute before:inset-0 before:bg-[#32F08C]/14 before:blur-md before:rounded-md before:opacity-0 group-hover:before:opacity-100 before:transition-opacity before:duration-500 after:block after:h-[2px] after:bg-gradient-to-r from-transparent via-[#32F08C] to-transparent after:mt-1 after:scale-x-0 group-hover:after:scale-x-100 after:transition-transform after:duration-500">TRAE SOLO</span>
+                <span className="text-gray-300 transition-colors group-hover:text-gray-200"> em ação</span>
               </p>
             </motion.div>
             
@@ -98,30 +94,21 @@ export default function EventPage() {
               </p>
             </motion.div>
             
-            <motion.div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12" initial={{opacity:0, y:18}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6, delay:0.15}}>
-              <div className="flex items-center px-6 py-3 bg-black rounded-full border border-gray-800 hover:border-gray-700 transition-all duration-300">
-                <Calendar className="w-5 h-5 mr-3 text-gray-500" />
-                <span className="text-lg font-medium text-gray-300">23 de novembro de 2025</span>
-              </div>
-              <div className="flex items-center px-6 py-3 bg-black rounded-full border border-gray-800 hover:border-gray-700 transition-all duration-300">
-                <Clock className="w-5 h-5 mr-3 text-gray-500" />
-                <span className="text-lg font-medium text-gray-300">Formato Online</span>
-              </div>
-            </motion.div>
             
-            <motion.a href="https://luma.com/d2kocb6e" target="_blank" rel="noopener noreferrer" className="group relative inline-flex items-center bg-black border border-gray-600 hover:border-gray-400 text-white px-10 py-5 rounded-xl text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.15)] overflow-hidden" initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6, delay:0.2}}>
-              <span className="flex items-center relative z-10">
+            <motion.a href="https://luma.com/d2kocb6e" target="_blank" rel="noopener noreferrer" className="group relative inline-flex items-center px-10 py-5 rounded-2xl text-lg font-semibold bg-gradient-to-b from-[#32F08C] to-[#22C06C] text-black shadow-[0_8px_20px_rgba(50,240,140,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#32F08C]" initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6, delay:0.2}}>
+              <span className="flex items-center">
                 Garantir Minha Vaga Gratuita
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-5 h-5 ml-2" />
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
             </motion.a>
           </div>
         </div>
       </section>
 
+      
+
       {/* All Black Features Section with 3D effects */}
-      <section className="py-16 bg-black">
+      <section id="features" className="py-16 bg-black">
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
@@ -186,7 +173,7 @@ export default function EventPage() {
 
 
 
-      <section className="py-16 bg-black">
+      <section id="sobre" className="py-16 bg-black">
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{opacity:0, y:18}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6}}>
@@ -221,15 +208,18 @@ export default function EventPage() {
       </section>
 
       {/* All Black Footer with enhanced effects */}
-      <footer className="relative bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] text-white py-20 border-t border-gray-800">
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-        <div className="container mx-auto px-6">
+      <footer id="footer" className="relative bg-gradient-to-b from-[#0a0a0a] via-[#0f0f0f] to-[#141414] text-white py-20 border-t border-gray-900">
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"></div>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0)_70%)]"></div>
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015),transparent_18%),linear-gradient(to_left,rgba(255,255,255,0.015),transparent_18%)]"></div>
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.02),transparent_40%),linear-gradient(to_top,rgba(255,255,255,0.02),transparent_40%)]"></div>
+        <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <motion.div className="mb-8" initial={{opacity:0, y:16}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.6}}>
               <h3 className="text-3xl font-bold mb-4 text-white bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                 TRAE SOLO Brasil
               </h3>
-              <p className="text-xl text-gray-500 mb-8">
+              <p className="text-xl text-gray-400 mb-8">
                 Transformando ideias em realidade com inteligência artificial
               </p>
             </motion.div>
