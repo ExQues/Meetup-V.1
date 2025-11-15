@@ -10,7 +10,7 @@ import { apiService } from "@/services/api"
 import { LogOut, User, Shield } from "lucide-react"
 
 export type Submission = {
-  _id?: string;
+  id?: string;
   nome: string
   email: string
   telefone: string

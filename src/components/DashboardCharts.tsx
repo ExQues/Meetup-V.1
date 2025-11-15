@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
 interface Submission {
-  id: string;
+  id?: string;
   nome: string;
   email: string;
   telefone: string;

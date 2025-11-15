@@ -184,7 +184,7 @@ router.delete('/clear', authenticateToken, async (req, res) => {
     
     res.json({
       message: 'Todas as submissões foram removidas',
-      deletedCount: result.count
+      deletedCount: result.deletedCount
     });
 
   } catch (error: any) {
