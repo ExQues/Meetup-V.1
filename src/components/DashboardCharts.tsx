@@ -140,7 +140,7 @@ export function DashboardCharts({ submissions, loading }: DashboardChartsProps) 
         </h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={hourlyData.filter((_, i) => i % 2 === 0)}> {/* Mostrar apenas horas pares */}
+            <BarChart data={hourlyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis 
                 dataKey="hour" 
