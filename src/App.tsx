@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import EventPage from "@/pages/EventPage";
 import Formulario from "@/pages/Formulario";
 import Comunidade from "@/pages/Comunidade";
+import AdminMeetup from "@/pages/AdminMeetup";
 import { motion, type SpringOptions, type MotionValue, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Home, FileText, Users } from "lucide-react";
@@ -202,7 +203,7 @@ export default function App() {
                 <DockLabel>Início</DockLabel>
               </DockItem>
             </Link>
-            <Link to="/formulário" className="contents">
+            <Link to="/formulario" className="contents">
               <DockItem>
                 <DockIcon>
                   <FileText className="w-6 h-6 text-white" />
@@ -224,8 +225,9 @@ export default function App() {
       <div className="pt-28">
         <Routes>
           <Route path="/" element={<EventPage />} />
-          <Route path="/formulário" element={<Formulario />} />
+          <Route path="/formulario" element={<Formulario />} />
           <Route path="/comunidade" element={<Comunidade />} />
+          <Route path="/adminmeetup" element={<AdminMeetup />} />
         </Routes>
       </div>
     </Router>

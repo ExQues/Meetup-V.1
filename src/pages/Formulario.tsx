@@ -1,30 +1,72 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { apiService } from "@/services/api";
 
 export default function Formulario() {
   const [form, setForm] = useState({
     nome: "",
     email: "",
-    assunto: "",
-    mensagem: "",
+    telefone: "",
+    discord: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   function validate() {
     const nextErrors: Record<string, string> = {};
-    if (!form.nome.trim()) nextErrors.nome = "Informe seu nome.";
-    if (!form.email.trim()) nextErrors.email = "Informe seu e-mail.";
-    else if (!/^\S+@\S+\.\S+$/.test(form.email)) nextErrors.email = "E-mail inválido.";
-    if (!form.assunto.trim()) nextErrors.assunto = "Informe o assunto.";
-    if (!form.mensagem.trim() || form.mensagem.trim().length < 10) nextErrors.mensagem = "Mensagem muito curta.";
+    
+    // Validação de nome
+    if (!form.nome.trim()) {
+      nextErrors.nome = "Informe seu nome.";
+    } else if (form.nome.trim().length < 2) {
+      nextErrors.nome = "Nome deve ter pelo menos 2 caracteres.";
+    } else if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(form.nome.trim())) {
+      nextErrors.nome = "Nome deve conter apenas letras e espaços.";
+    }
+    
+    // Validação de email
+    if (!form.email.trim()) {
+      nextErrors.email = "Informe seu e-mail.";
+    } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
+      nextErrors.email = "E-mail inválido.";
+    }
+    
+    // Validação de telefone
+    const digits = form.telefone.replace(/\D/g, "");
+    if (!digits) {
+      nextErrors.telefone = "Informe seu telefone.";
+    } else if (digits.length < 10 || digits.length > 11) {
+      nextErrors.telefone = "Telefone deve ter 10 ou 11 dígitos.";
+    }
+    
+    // Validação de Discord
+    if (!form.discord.trim()) {
+      nextErrors.discord = "Informe seu usuário do Discord.";
+    } else if (!/^[a-zA-Z0-9_.#]+$/.test(form.discord.trim())) {
+      nextErrors.discord = "Usuário Discord inválido (use apenas letras, números, _ e #).";
+    } else if (form.discord.trim().length < 2) {
+      nextErrors.discord = "Discord deve ter pelo menos 2 caracteres.";
+    }
+    
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
 
   function handleChange<K extends keyof typeof form>(key: K, value: string) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    if (key === 'telefone') {
+      // Formatar telefone em tempo real e limitar a 11 dígitos
+      const cleaned = value.replace(/\D/g, '').slice(0, 11);
+      let formatted = cleaned;
+      if (cleaned.length <= 10) {
+        formatted = cleaned.replace(/(\d{2})(\d{0,4})(\d{0,4})/, '($1) $2-$3').trim();
+      } else {
+        formatted = cleaned.replace(/(\d{2})(\d{0,5})(\d{0,4})/, '($1) $2-$3').trim();
+      }
+      setForm((prev) => ({ ...prev, [key]: formatted }));
+    } else {
+      setForm((prev) => ({ ...prev, [key]: value }));
+    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -32,12 +74,24 @@ export default function Formulario() {
     if (!validate()) return;
     setStatus("loading");
     try {
-      await new Promise((r) => setTimeout(r, 700));
+      // Enviar telefone sem formatação para o backend
+      const formData = {
+        ...form,
+        telefone: form.telefone.replace(/\D/g, '') // Remove caracteres não numéricos
+      };
+      await apiService.submitForm(formData);
       setStatus("success");
-      // Simulação de envio: integração futura via fetch
-      // console.log("Formulário enviado", form);
-    } catch {
+      setForm({ nome: "", email: "", telefone: "", discord: "" });
+      setErrors({});
+    } catch (error: any) {
       setStatus("error");
+      if (error.message.includes('email já foi cadastrado')) {
+        setErrors({ email: 'Este email já foi cadastrado anteriormente.' });
+      } else if (error.message.includes('Muitas tentativas')) {
+        setErrors({ general: 'Você atingiu o limite de envios. Tente novamente mais tarde.' });
+      } else {
+        setErrors({ general: 'Ocorreu um erro ao enviar. Tente novamente.' });
+      }
     }
   }
 
@@ -105,41 +159,41 @@ export default function Formulario() {
                     )}
                   </div>
 
-                  <div className="flex flex-col sm:col-span-2">
-                    <label htmlFor="assunto" className="text-sm text-gray-300 mb-2">Assunto</label>
+                  <div className="flex flex-col">
+                    <label htmlFor="telefone" className="text-sm text-gray-300 mb-2">Telefone</label>
                     <input
-                      id="assunto"
-                      name="assunto"
-                      type="text"
-                      value={form.assunto}
-                      onChange={(e) => handleChange("assunto", e.target.value)}
+                      id="telefone"
+                      name="telefone"
+                      type="tel"
+                      value={form.telefone}
+                      onChange={(e) => handleChange("telefone", e.target.value)}
                       required
-                      aria-invalid={Boolean(errors.assunto)}
-                      aria-describedby={errors.assunto ? "error-assunto" : undefined}
-                      placeholder="Assunto"
+                      aria-invalid={Boolean(errors.telefone)}
+                      aria-describedby={errors.telefone ? "error-telefone" : undefined}
+                      placeholder="Seu telefone"
                       className="w-full rounded-xl border border-white/10 bg-neutral-900 px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/20"
                     />
-                    {errors.assunto && (
-                      <p id="error-assunto" className="mt-2 text-sm text-red-400">{errors.assunto}</p>
+                    {errors.telefone && (
+                      <p id="error-telefone" className="mt-2 text-sm text-red-400">{errors.telefone}</p>
                     )}
                   </div>
 
-                  <div className="flex flex-col sm:col-span-2">
-                    <label htmlFor="mensagem" className="text-sm text-gray-300 mb-2">Mensagem</label>
-                    <textarea
-                      id="mensagem"
-                      name="mensagem"
-                      rows={5}
-                      value={form.mensagem}
-                      onChange={(e) => handleChange("mensagem", e.target.value)}
+                  <div className="flex flex-col">
+                    <label htmlFor="discord" className="text-sm text-gray-300 mb-2">Discord</label>
+                    <input
+                      id="discord"
+                      name="discord"
+                      type="text"
+                      value={form.discord}
+                      onChange={(e) => handleChange("discord", e.target.value)}
                       required
-                      aria-invalid={Boolean(errors.mensagem)}
-                      aria-describedby={errors.mensagem ? "error-mensagem" : undefined}
-                      placeholder="Sua mensagem"
+                      aria-invalid={Boolean(errors.discord)}
+                      aria-describedby={errors.discord ? "error-discord" : undefined}
+                      placeholder="Seu usuário do Discord"
                       className="w-full rounded-xl border border-white/10 bg-neutral-900 px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/20"
                     />
-                    {errors.mensagem && (
-                      <p id="error-mensagem" className="mt-2 text-sm text-red-400">{errors.mensagem}</p>
+                    {errors.discord && (
+                      <p id="error-discord" className="mt-2 text-sm text-red-400">{errors.discord}</p>
                     )}
                   </div>
 
@@ -158,7 +212,7 @@ export default function Formulario() {
                       transition={{ duration: 0.25 }}
                       className="sm:col-span-2 mt-2 text-green-400"
                     >
-                      Mensagem enviada com sucesso!
+                      Dados enviados com sucesso!
                     </motion.div>
                   )}
                   {status === "error" && (
@@ -168,7 +222,7 @@ export default function Formulario() {
                       transition={{ duration: 0.25 }}
                       className="sm:col-span-2 mt-2 text-red-400"
                     >
-                      Ocorreu um erro ao enviar. Tente novamente.
+                      {errors.general || 'Ocorreu um erro ao enviar. Tente novamente.'}
                     </motion.div>
                   )}
                 </motion.form>
