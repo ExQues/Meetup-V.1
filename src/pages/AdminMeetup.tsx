@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { DashboardCard } from "@/components/ui/dashboard-card"
 import { AdminHeader } from "@/components/AdminHeader"
 import { SubmissionsTable } from "@/components/SubmissionsTable"
@@ -141,38 +140,16 @@ export default function AdminMeetup() {
   // Tela de login
   if (!authed) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-4 relative overflow-hidden">
-        {/* Background animado */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-black opacity-50"></div>
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-md relative z-10"
-        >
+      <div className="min-h-screen bg-black flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <motion.div 
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
-              className="flex items-center justify-center gap-3 mb-4"
-            >
+            <div className="flex items-center justify-center gap-3 mb-4">
               <Shield className="w-12 h-12 text-blue-400" />
               <h1 className="text-3xl font-bold text-white">Admin Meetup</h1>
-            </motion.div>
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.4 }}
-              className="text-gray-400"
-            >
+            </div>
+            <p className="text-gray-400">
               Acesso restrito para administradores
-            </motion.p>
+            </p>
           </div>
 
           <DashboardCard>
@@ -187,7 +164,7 @@ export default function AdminMeetup() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Digite sua senha"
-                  className="w-full px-4 py-3 bg-black/60 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="w-full px-4 py-3 bg-black border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={loading}
                   required
                 />
@@ -199,11 +176,10 @@ export default function AdminMeetup() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium rounded-lg"
               >
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     Entrando...
                   </>
                 ) : (
@@ -215,7 +191,7 @@ export default function AdminMeetup() {
               </button>
             </form>
           </DashboardCard>
-        </motion.div>
+        </div>
       </div>
     )
   }
@@ -224,20 +200,20 @@ export default function AdminMeetup() {
   return (
     <main className="min-h-screen bg-black" role="main">
       {/* Header */}
-      <header className="bg-black border-b border-white/10" role="banner">
+      <header className="bg-black border-b border-gray-800" role="banner">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Shield className="w-8 h-8 text-blue-400" />
+              <Shield className="w-8 h-8 text-blue-500" />
               <div>
                 <h1 className="text-xl font-bold text-white">Admin Meetup</h1>
-                <p className="text-sm text-gray-400">Gerenciamento de usuários</p>
+                <p className="text-sm text-gray-300">Gerenciamento de usuários</p>
               </div>
             </div>
             
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-white/5 border border-white/10 rounded-xl text-white transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white transition-colors"
               aria-label="Sair do painel"
             >
               <LogOut className="w-4 h-4" />
