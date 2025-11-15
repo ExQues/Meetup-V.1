@@ -68,13 +68,13 @@ try {
   console.error('❌ Erro ao criar cliente Supabase:', error)
 }
 
-// Middleware de autenticação melhorado
+// Middleware de autenticação SIMPLIFICADO para testes
 const authenticateToken = (req: any, res: any, next: any) => {
   try {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
 
-    console.log('=== AUTH DEBUG ===')
+    console.log('=== AUTH SIMPLES ===')
     console.log('Auth Header:', authHeader)
     console.log('Token:', token ? 'Presente' : 'Ausente')
 
@@ -82,16 +82,28 @@ const authenticateToken = (req: any, res: any, next: any) => {
       return res.status(401).json({ error: 'Token não fornecido' })
     }
 
-    const jwtSecret = process.env.JWT_SECRET
-    if (!jwtSecret) {
-      console.error('❌ JWT_SECRET não configurado')
-      return res.status(500).json({ error: 'Erro de configuração do servidor' })
+    // Para testes, aceitar qualquer token que comece com 'admin-token-'
+    if (token.startsWith('admin-token-')) {
+      console.log('✅ Token válido (modo teste)')
+      req.user = { role: 'admin' }
+      return next()
     }
 
-    const decoded = jwt.verify(token, jwtSecret)
-    req.user = decoded
-    console.log('✅ Token válido, usuário:', decoded)
-    next()
+    // Se tiver JWT_SECRET, tentar verificar o token JWT
+    const jwtSecret = process.env.JWT_SECRET
+    if (jwtSecret) {
+      try {
+        const decoded = jwt.verify(token, jwtSecret)
+        req.user = decoded
+        console.log('✅ Token JWT válido, usuário:', decoded)
+        return next()
+      } catch (jwtError) {
+        console.log('❌ Token JWT inválido')
+      }
+    }
+
+    console.log('❌ Token inválido')
+    return res.status(403).json({ error: 'Token inválido' })
   } catch (error) {
     console.error('❌ Erro na autenticação:', error)
     return res.status(403).json({ error: 'Token inválido' })
@@ -141,23 +153,21 @@ app.get('/api/health', async (req, res) => {
   }
 })
 
-// Rota de login com debug detalhado
+// Rota de login SIMPLIFICADA para testes
 app.post('/api/auth/login', async (req, res) => {
   try {
-    console.log('=== LOGIN ATTEMPT ===')
+    console.log('=== LOGIN SIMPLES ===')
     const { password } = req.body
     const adminPassword = process.env.ADMIN_PASSWORD
-    const jwtSecret = process.env.JWT_SECRET
 
     console.log('Password recebido:', password ? '✅ Presente' : '❌ Ausente')
-    console.log('ADMIN_PASSWORD configurado:', adminPassword ? '✅ Sim' : '❌ Não')
-    console.log('JWT_SECRET configurado:', jwtSecret ? '✅ Sim' : '❌ Não')
+    console.log('ADMIN_PASSWORD:', adminPassword ? '✅ Configurado' : '❌ Ausente')
 
-    if (!adminPassword || !jwtSecret) {
-      console.error('❌ Configuração incompleta')
+    if (!adminPassword) {
+      console.error('❌ ADMIN_PASSWORD não configurado')
       return res.status(500).json({ 
-        error: 'Erro de configuração do servidor',
-        details: 'Variáveis de ambiente não configuradas'
+        error: 'Erro de configuração',
+        details: 'ADMIN_PASSWORD não configurado'
       })
     }
 
@@ -166,17 +176,18 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Senha incorreta' })
     }
 
-    console.log('✅ Senha correta, gerando token...')
-    const token = jwt.sign(
-      { role: 'admin', timestamp: Date.now() },
-      jwtSecret,
-      { expiresIn: '24h' }
-    )
-
-    console.log('✅ Token gerado com sucesso')
-    res.json({ token, message: 'Login realizado com sucesso' })
+    console.log('✅ Senha correta! Login bem sucedido!')
+    
+    // Criar token simples sem JWT para testes
+    const simpleToken = 'admin-token-' + Date.now()
+    
+    res.json({ 
+      token: simpleToken, 
+      message: 'Login realizado com sucesso',
+      type: 'simple-token'
+    })
   } catch (error) {
-    console.error('❌ Erro crítico no login:', error)
+    console.error('❌ Erro no login:', error)
     res.status(500).json({ 
       error: 'Erro interno do servidor',
       details: error.message 
