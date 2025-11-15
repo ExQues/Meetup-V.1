@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions'
 import serverless from 'serverless-http'
-import app from '../../api/app.js'
+import app from '../../api/app'
 
 const serverlessHandler = serverless(app)
 

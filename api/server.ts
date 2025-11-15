@@ -5,9 +5,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { connectDB } from './config/database.js';
-import authRoutes from './routes/auth.js';
-import formRoutes from './routes/forms.js';
+import { connectDB } from './config/database';
+import authRoutes from './routes/auth';
+import formRoutes from './routes/forms';
 
 const app = express();
 const PORT = process.env.PORT || 5000;

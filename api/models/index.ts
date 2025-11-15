@@ -89,7 +89,7 @@ class MockSubmission {
 }
 
 // Importar o modelo real
-import { Submission as RealSubmission } from './Submission.js';
+import { Submission as RealSubmission } from './Submission';
 
 // Usar mock se estiver em modo memory
 export const Submission = process.env.MONGODB_URI === 'memory' 

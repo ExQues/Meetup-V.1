@@ -1,8 +1,8 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
-import { submissionService } from '../services/supabase.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { submissionService } from '../services/supabase';
+import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 

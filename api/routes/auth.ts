@@ -1,7 +1,6 @@
 import express from 'express';
-import bcrypt from 'bcrypt';
 import { body, validationResult } from 'express-validator';
-import { generateToken } from '../middleware/auth.js';
+import { generateToken } from '../middleware/auth';
 
 const router = express.Router();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'F7!tZp@93eL^Qx2u#D6vM*8rY%kB1wN&hG5sC$J0aT';

@@ -11,8 +11,8 @@ import cors from 'cors'
 import path from 'path'
 import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
-import authRoutes from './routes/auth.js'
-import formRoutes from './routes/forms.js'
+import authRoutes from './routes/auth'
+import formRoutes from './routes/forms'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
