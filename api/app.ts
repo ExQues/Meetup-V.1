@@ -30,14 +30,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 /**
  * API Routes
  */
-app.use('/api/auth', authRoutes)
-app.use('/api/forms', formRoutes)
+app.use('/auth', authRoutes)
+app.use('/forms', formRoutes)
 
 /**
  * health
  */
 app.use(
-  '/api/health',
+  '/health',
   (req: Request, res: Response, next: NextFunction): void => {
     res.status(200).json({
       success: true,
