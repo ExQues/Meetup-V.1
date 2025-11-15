@@ -7,31 +7,34 @@ import rateLimit from 'express-rate-limit'
 import { createClient } from '@supabase/supabase-js'
 import jwt from 'jsonwebtoken'
 
-// Configuração do Supabase
-const supabaseUrl = process.env.SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE!
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  }
-})
-
 // Criar aplicação Express
 const app = express()
 
+// Middleware de logging detalhado
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`)
+  console.log('Headers:', JSON.stringify(req.headers, null, 2))
+  console.log('Body:', JSON.stringify(req.body, null, 2))
+  next()
+})
+
 // Middleware de segurança
-app.use(helmet())
-app.use(cors({
-  origin: ['https://meetuptrae.netlify.app', 'http://localhost:5173'],
-  credentials: true
+app.use(helmet({
+  contentSecurityPolicy: false, // Desabilitar CSP para evitar conflitos
+  crossOriginEmbedderPolicy: false // Desabilitar para permitir CORS
 }))
 
-// Rate limiting
+app.use(cors({
+  origin: ['https://meetuptrae.netlify.app', 'http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}))
+
+// Rate limiting mais permissivo para testes
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100,
+  windowMs: 15 * 60 * 1000,
+  max: 1000, // Aumentar limite para testes
   message: 'Muitas requisições deste IP, tente novamente mais tarde.'
 })
 app.use(limiter)
@@ -40,116 +43,196 @@ app.use(limiter)
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 
-// Middleware de autenticação
-const authenticateToken = (req: any, res: any, next: any) => {
-  const authHeader = req.headers['authorization']
-  const token = authHeader && authHeader.split(' ')[1]
-
-  if (!token) {
-    return res.status(401).json({ error: 'Token não fornecido' })
+// Configuração do Supabase com validação
+let supabase: any = null
+try {
+  const supabaseUrl = process.env.SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE
+  
+  console.log('=== SUPABASE CONFIG ===')
+  console.log('SUPABASE_URL:', supabaseUrl ? '✅ Configurada' : '❌ Não configurada')
+  console.log('SUPABASE_SERVICE_ROLE:', supabaseServiceKey ? '✅ Configurada' : '❌ Não configurada')
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('❌ ERRO CRÍTICO: Variáveis de ambiente do Supabase não configuradas!')
+  } else {
+    supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      }
+    })
+    console.log('✅ Cliente Supabase criado com sucesso')
   }
+} catch (error) {
+  console.error('❌ Erro ao criar cliente Supabase:', error)
+}
 
+// Middleware de autenticação melhorado
+const authenticateToken = (req: any, res: any, next: any) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!)
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+
+    console.log('=== AUTH DEBUG ===')
+    console.log('Auth Header:', authHeader)
+    console.log('Token:', token ? 'Presente' : 'Ausente')
+
+    if (!token) {
+      return res.status(401).json({ error: 'Token não fornecido' })
+    }
+
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) {
+      console.error('❌ JWT_SECRET não configurado')
+      return res.status(500).json({ error: 'Erro de configuração do servidor' })
+    }
+
+    const decoded = jwt.verify(token, jwtSecret)
     req.user = decoded
+    console.log('✅ Token válido, usuário:', decoded)
     next()
   } catch (error) {
+    console.error('❌ Erro na autenticação:', error)
     return res.status(403).json({ error: 'Token inválido' })
   }
 }
 
-// Rotas de autenticação
-app.post('/api/auth/login', async (req, res) => {
+// Rota de health check detalhada
+app.get('/api/health', async (req, res) => {
   try {
-    const { password } = req.body
-    const adminPassword = process.env.ADMIN_PASSWORD
-
-    if (password !== adminPassword) {
-      return res.status(401).json({ error: 'Senha incorreta' })
+    console.log('=== HEALTH CHECK ===')
+    
+    let supabaseStatus = '❌ Não conectado'
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from('submissions').select('id').limit(1)
+        if (error) {
+          supabaseStatus = `❌ Erro: ${error.message}`
+        } else {
+          supabaseStatus = '✅ Conectado'
+        }
+      } catch (err) {
+        supabaseStatus = `❌ Erro crítico: ${err.message}`
+      }
     }
-
-    const token = jwt.sign(
-      { role: 'admin' },
-      process.env.JWT_SECRET!,
-      { expiresIn: '24h' }
-    )
-
-    res.json({ token })
+    
+    const health = {
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      supabase: supabaseStatus,
+      environment: {
+        supabase_url: process.env.SUPABASE_URL ? '✅ Configurado' : '❌ Ausente',
+        supabase_service_role: process.env.SUPABASE_SERVICE_ROLE ? '✅ Configurado' : '❌ Ausente',
+        jwt_secret: process.env.JWT_SECRET ? '✅ Configurado' : '❌ Ausente',
+        admin_password: process.env.ADMIN_PASSWORD ? '✅ Configurado' : '❌ Ausente'
+      }
+    }
+    
+    console.log('Health Check Result:', health)
+    res.json(health)
   } catch (error) {
-    console.error('Erro no login:', error)
-    res.status(500).json({ error: 'Erro interno do servidor' })
+    console.error('❌ Erro no health check:', error)
+    res.status(500).json({ 
+      status: 'ERROR',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    })
   }
 })
 
-// Rota de health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() })
-})
-
-// Rotas de formulário
-app.post('/api/forms/submit', async (req, res) => {
+// Rota de login com debug detalhado
+app.post('/api/auth/login', async (req, res) => {
   try {
-    const { nome, email, telefone, discord } = req.body
+    console.log('=== LOGIN ATTEMPT ===')
+    const { password } = req.body
+    const adminPassword = process.env.ADMIN_PASSWORD
+    const jwtSecret = process.env.JWT_SECRET
 
-    // Verificar se já existe
-    const { data: existing } = await supabase
-      .from('submissions')
-      .select('id')
-      .eq('email', email.toLowerCase())
-      .single()
+    console.log('Password recebido:', password ? '✅ Presente' : '❌ Ausente')
+    console.log('ADMIN_PASSWORD configurado:', adminPassword ? '✅ Sim' : '❌ Não')
+    console.log('JWT_SECRET configurado:', jwtSecret ? '✅ Sim' : '❌ Não')
 
-    if (existing) {
-      return res.status(409).json({ 
-        error: 'Este email já foi cadastrado',
-        message: 'Você já enviou seu formulário anteriormente'
+    if (!adminPassword || !jwtSecret) {
+      console.error('❌ Configuração incompleta')
+      return res.status(500).json({ 
+        error: 'Erro de configuração do servidor',
+        details: 'Variáveis de ambiente não configuradas'
       })
     }
 
-    // Criar nova submissão
-    const { data, error } = await supabase
-      .from('submissions')
-      .insert([{
-        nome: nome.trim(),
-        email: email.toLowerCase().trim(),
-        telefone: telefone.replace(/\D/g, ''),
-        discord: discord.trim(),
-        ip_address: req.ip,
-        user_agent: req.get('User-Agent') || null,
-        created_at: new Date().toISOString(),
-      }])
-      .select()
-      .single()
-
-    if (error) {
-      if (error.code === '23505') {
-        return res.status(409).json({ 
-          error: 'Este email já foi cadastrado',
-          message: 'Você já enviou seu formulário anteriormente'
-        })
-      }
-      throw error
+    if (password !== adminPassword) {
+      console.log('❌ Senha incorreta')
+      return res.status(401).json({ error: 'Senha incorreta' })
     }
 
-    res.status(201).json({
-      message: 'Formulário enviado com sucesso!',
-      submission: data
-    })
+    console.log('✅ Senha correta, gerando token...')
+    const token = jwt.sign(
+      { role: 'admin', timestamp: Date.now() },
+      jwtSecret,
+      { expiresIn: '24h' }
+    )
 
+    console.log('✅ Token gerado com sucesso')
+    res.json({ token, message: 'Login realizado com sucesso' })
   } catch (error) {
-    console.error('Erro ao salvar submissão:', error)
+    console.error('❌ Erro crítico no login:', error)
     res.status(500).json({ 
       error: 'Erro interno do servidor',
-      message: 'Erro ao processar formulário'
+      details: error.message 
     })
   }
 })
 
-// Rotas protegidas (admin)
+// Rota de estatísticas com proteção
+app.get('/api/forms/stats', authenticateToken, async (req, res) => {
+  try {
+    console.log('=== GET STATS ===')
+    
+    if (!supabase) {
+      return res.status(500).json({ 
+        error: 'Supabase não configurado',
+        details: 'Verifique as variáveis de ambiente'
+      })
+    }
+
+    const { count, error } = await supabase
+      .from('submissions')
+      .select('*', { count: 'exact', head: true })
+
+    if (error) {
+      console.error('❌ Erro ao buscar estatísticas:', error)
+      return res.status(500).json({ 
+        error: 'Erro ao buscar estatísticas',
+        details: error.message 
+      })
+    }
+
+    console.log('✅ Estatísticas recuperadas:', count)
+    res.json({ total: count || 0 })
+  } catch (error) {
+    console.error('❌ Erro crítico nas estatísticas:', error)
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      details: error.message 
+    })
+  }
+})
+
+// Rota de submissões com proteção
 app.get('/api/forms/submissions', authenticateToken, async (req, res) => {
   try {
+    console.log('=== GET SUBMISSIONS ===')
     const page = parseInt(req.query.page as string) || 1
     const limit = parseInt(req.query.limit as string) || 50
     const offset = (page - 1) * limit
+
+    if (!supabase) {
+      return res.status(500).json({ 
+        error: 'Supabase não configurado',
+        details: 'Verifique as variáveis de ambiente'
+      })
+    }
 
     const { data, error, count } = await supabase
       .from('submissions')
@@ -157,80 +240,139 @@ app.get('/api/forms/submissions', authenticateToken, async (req, res) => {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
-    if (error) throw error
+    if (error) {
+      console.error('❌ Erro ao buscar submissões:', error)
+      return res.status(500).json({ 
+        error: 'Erro ao buscar submissões',
+        details: error.message 
+      })
+    }
 
+    console.log(`✅ ${data?.length || 0} submissões recuperadas`)
     res.json({
       submissions: data || [],
       pagination: {
         page,
         limit,
         total: count || 0,
-        pages: Math.ceil((count || 0) / limit),
+        pages: Math.ceil((count || 0) / limit)
       }
     })
-
   } catch (error) {
-    console.error('Erro ao buscar submissões:', error)
+    console.error('❌ Erro crítico ao buscar submissões:', error)
     res.status(500).json({ 
       error: 'Erro interno do servidor',
-      message: 'Erro ao buscar submissões'
+      details: error.message 
     })
   }
 })
 
-app.get('/api/forms/stats', authenticateToken, async (req, res) => {
+// Rota de submissão pública (sem autenticação)
+app.post('/api/forms/submit', async (req, res) => {
   try {
-    const now = new Date()
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const startOfWeek = new Date(now)
-    startOfWeek.setDate(now.getDate() - now.getDay())
-    startOfWeek.setHours(0, 0, 0, 0)
+    console.log('=== FORM SUBMISSION ===')
+    const { nome, email, telefone, discord } = req.body
 
-    const [
-      totalResult,
-      todayResult,
-      weekResult,
-      lastSubmissionResult
-    ] = await Promise.all([
-      supabase.from('submissions').select('*', { count: 'exact', head: true }),
-      supabase.from('submissions').select('*', { count: 'exact', head: true }).gte('created_at', startOfDay.toISOString()),
-      supabase.from('submissions').select('*', { count: 'exact', head: true }).gte('created_at', startOfWeek.toISOString()),
-      supabase.from('submissions').select('*').order('created_at', { ascending: false }).limit(1).single()
-    ])
+    console.log('Dados recebidos:', { nome, email, telefone, discord })
 
-    res.json({
-      total: totalResult.count || 0,
-      today: todayResult.count || 0,
-      thisWeek: weekResult.count || 0,
-      lastSubmission: lastSubmissionResult.data || null,
+    if (!supabase) {
+      console.error('❌ Supabase não configurado')
+      return res.status(500).json({ 
+        error: 'Erro de configuração do servidor',
+        details: 'Supabase não configurado'
+      })
+    }
+
+    // Validação básica
+    if (!nome || !email) {
+      console.log('❌ Campos obrigatórios ausentes')
+      return res.status(400).json({ 
+        error: 'Nome e email são obrigatórios' 
+      })
+    }
+
+    console.log('Verificando email existente...')
+    const { data: existing } = await supabase
+      .from('submissions')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .single()
+
+    if (existing) {
+      console.log('❌ Email já cadastrado')
+      return res.status(409).json({ 
+        error: 'Este email já foi cadastrado',
+        message: 'Você já enviou seu formulário anteriormente'
+      })
+    }
+
+    console.log('Criando nova submissão...')
+    const { data, error } = await supabase
+      .from('submissions')
+      .insert([{
+        nome: nome.trim(),
+        email: email.toLowerCase().trim(),
+        telefone: telefone ? telefone.replace(/\D/g, '') : null,
+        discord: discord ? discord.trim() : null,
+        ip_address: req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown',
+        user_agent: req.get('User-Agent') || null,
+        created_at: new Date().toISOString(),
+      }])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('❌ Erro ao inserir no Supabase:', error)
+      if (error.code === '23505') {
+        return res.status(409).json({ 
+          error: 'Este email já foi cadastrado',
+          message: 'Você já enviou seu formulário anteriormente'
+        })
+      }
+      return res.status(500).json({ 
+        error: 'Erro ao salvar formulário',
+        details: error.message 
+      })
+    }
+
+    console.log('✅ Submissão criada com sucesso:', data?.id)
+    res.status(201).json({
+      message: 'Formulário enviado com sucesso!',
+      id: data?.id
     })
-
   } catch (error) {
-    console.error('Erro ao buscar estatísticas:', error)
+    console.error('❌ Erro crítico na submissão:', error)
     res.status(500).json({ 
       error: 'Erro interno do servidor',
-      message: 'Erro ao buscar estatísticas'
+      details: error.message 
     })
   }
 })
 
-// Tratamento de erros
+// Middleware de erro global
 app.use((error: any, req: any, res: any, next: any) => {
-  console.error('Erro não tratado:', error)
+  console.error('=== ERRO GLOBAL ===')
+  console.error('Erro:', error)
+  console.error('Stack:', error.stack)
+  
   res.status(500).json({
     error: 'Erro interno do servidor',
-    message: process.env.NODE_ENV === 'development' ? error.message : 'Algo deu errado!'
+    message: error.message,
+    timestamp: new Date().toISOString()
   })
 })
 
 // Rota 404
-app.use('*', (req: any, res: any) => {
-  res.status(404).json({ error: 'Rota não encontrada' })
+app.use('*', (req, res) => {
+  console.log(`=== 404 - Rota não encontrada: ${req.method} ${req.originalUrl}`)
+  res.status(404).json({
+    error: 'Rota não encontrada',
+    path: req.originalUrl,
+    method: req.method
+  })
 })
 
-// Exportar handler serverless
-const serverlessHandler = serverless(app)
+// Handler para Netlify
+const handler = serverless(app)
 
-export const handler: Handler = async (event, context) => {
-  return serverlessHandler(event, context)
-}
+export { handler }
