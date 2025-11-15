@@ -1,6 +1,7 @@
 import { Calendar, Clock, Wifi, Users, Zap, Star, ArrowRight, Sparkles, Code, Terminal, Square } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { BackgroundBeams } from '@/components/ui/background-beams'
+import { TypingText } from '@/components/TypingText'
 import { useEffect, useRef, FC, ReactNode } from 'react'
 import { Card } from '@/components/ui/card'
 
@@ -47,7 +48,7 @@ export default function EventPage() {
   return (
     <div className="min-h-screen bg-black">
       {/* Dark Hero Section - All Black with Subtle Effects */}
-      <section id="hero" ref={sectionRef} className="bg-black text-white relative overflow-hidden">
+      <section id="hero" ref={sectionRef} className="bg-black text-white relative">
         <BackgroundBeams color="#32F08C" visible={14} />
         
         <div className="container mx-auto px-6 py-24 md:py-32 relative z-10">
@@ -56,10 +57,7 @@ export default function EventPage() {
             
             <motion.div className="mb-8" initial={{opacity:0, y:14}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.7, delay:0.05}}>
               <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight mb-2 bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(255,255,255,0.06)]">
-                <motion.span className="inline-block" initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.45, delay:0.05}}>Demonstração</motion.span>
-                <motion.span className="inline-block mx-2" initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.45, delay:0.1}}>e</motion.span>
-                <motion.span className="inline-block" initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.45, delay:0.15}}>Live</motion.span>
-                <motion.span className="inline-block ml-2" initial={{opacity:0, y:8}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{duration:0.45, delay:0.2}}>Demo</motion.span>
+                <TypingText text="Demonstração e Live Demo" speed={40} delay={50} once className="inline-block" />
               </h1>
               <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold mb-6">
                 <span className="relative inline-block px-1 text-[#32F08C] before:content-[''] before:absolute before:inset-0 before:bg-[#32F08C]/14 before:blur-md before:rounded-md before:opacity-0 group-hover:before:opacity-100 before:transition-opacity before:duration-500 after:block after:h-[2px] after:bg-gradient-to-r from-transparent via-[#32F08C] to-transparent after:mt-1 after:scale-x-0 group-hover:after:scale-x-100 after:transition-transform after:duration-500">TRAE SOLO</span>
