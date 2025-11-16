@@ -24,7 +24,16 @@ export async function handler(event: any) {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Config incompleta' }) };
     }
 
-    if (event.httpMethod === 'POST' && event.path === '/api/submit') {
+    // Rotas de teste
+    if (event.httpMethod === 'GET' && (event.path === '/api/test' || event.path === '/.netlify/functions/api/test' || event.path === '/test')) {
+      return { statusCode: 200, headers, body: JSON.stringify({ message: 'API funcionando!' }) };
+    }
+
+    if (event.httpMethod === 'GET' && (event.path === '/api/health' || event.path === '/.netlify/functions/api/health' || event.path === '/health')) {
+      return { statusCode: 200, headers, body: JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }) };
+    }
+
+    if (event.httpMethod === 'POST' && (event.path === '/api/submit' || event.path === '/.netlify/functions/api/submit' || event.path === '/submit')) {
       const data = JSON.parse(event.body || '{}');
       console.log('📦 Dados:', data);
 
@@ -79,7 +88,7 @@ export async function handler(event: any) {
       }
     }
 
-    if (event.httpMethod === 'GET' && event.path === '/api/inscricoes') {
+    if (event.httpMethod === 'GET' && (event.path === '/api/inscricoes' || event.path === '/.netlify/functions/api/inscricoes' || event.path === '/inscricoes')) {
       const response = await fetch(`${SUPABASE_URL}/rest/v1/inscricoes?order=created_at.desc`, {
         headers: {
           'apikey': SUPABASE_KEY,
