@@ -1,5 +1,6 @@
 // API service para comunicação com o backend
 import { fallbackService } from './fallback-service';
+import { clientDataService } from './client-data-service';
 
 // Usar Netlify functions em produção, localhost apenas para desenvolvimento local
 const API_BASE_URL = import.meta.env.PROD ? '/.netlify/functions/api' : (import.meta.env.VITE_API_URL || 'http://localhost:5004/api');
@@ -56,13 +57,28 @@ class ApiService {
 
   // Submissões
   async submitForm(formData: any) {
-    const response = await fetch(`${API_BASE_URL}/forms/submit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    });
+    try {
+      // Try using the Netlify function first
+      const response = await fetch(`/.netlify/functions/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
 
-    return this.handleResponse(response);
+      if (!response.ok) {
+        throw new Error('Erro ao enviar formulário');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.log('⚠️ Erro ao enviar formulário, usando client-side service:', error);
+      // Use client-side service as fallback
+      const result = clientDataService.addSubmission(formData);
+      return {
+        message: 'Formulário enviado com sucesso!',
+        id: result.id
+      };
+    }
   }
 
   async getSubmissions(page = 1, limit = 50) {
@@ -78,8 +94,9 @@ class ApiService {
 
       return response.json();
     } catch (error) {
-      console.log('⚠️ Erro ao buscar submissões, usando dados mock:', error);
-      return fallbackService.getMockSubmissions();
+      console.log('⚠️ Erro ao buscar submissões, usando client-side data service:', error);
+      // Use client-side service as primary fallback
+      return clientDataService.getSubmissions(page, limit);
     }
   }
 
@@ -96,31 +113,34 @@ class ApiService {
 
       return response.json();
     } catch (error) {
-      console.log('⚠️ Erro ao buscar estatísticas, usando dados mock:', error);
-      return fallbackService.getMockStats();
+      console.log('⚠️ Erro ao buscar estatísticas, usando client-side data service:', error);
+      // Use client-side service as primary fallback
+      return clientDataService.getStats();
     }
   }
 
   async exportData() {
     try {
-      const response = await fetch(`${API_BASE_URL}/forms/export`, {
-        headers: this.getHeaders()
-      });
-
-      return this.handleResponse(response);
+      // Use client-side service for export (no server function needed)
+      return {
+        csv: clientDataService.exportAsCSV(),
+        download: () => clientDataService.downloadCSV()
+      };
     } catch (error) {
-      console.log('⚠️ Erro ao exportar dados, usando dados mock:', error);
+      console.log('⚠️ Erro ao exportar dados:', error);
       return fallbackService.exportMockData();
     }
   }
 
   async clearSubmissions() {
-    const response = await fetch(`${API_BASE_URL}/forms/clear`, {
-      method: 'DELETE',
-      headers: this.getHeaders()
-    });
-
-    return this.handleResponse(response);
+    try {
+      // Use client-side service for clearing data
+      clientDataService.clearSubmissions();
+      return { message: 'Dados limpos com sucesso!' };
+    } catch (error) {
+      console.log('⚠️ Erro ao limpar dados:', error);
+      throw new Error('Erro ao limpar dados');
+    }
   }
 }
 

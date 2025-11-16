@@ -120,28 +120,26 @@ export default function AdminMeetup() {
     try {
       const data = await apiService.exportData()
       
-      // Criar CSV
-      const csvContent = [
-        ['Nome', 'Email', 'Telefone', 'Discord', 'Data de Cadastro'],
-        ...data.data.map((user: any) => [
-          user.Nome,
-          user.Email,
-          user.Telefone,
-          user.Discord,
-          user['Data de Envio']
-        ])
-      ].map(row => row.join(',')).join('\n')
-
-      // Download do arquivo
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      const url = URL.createObjectURL(blob)
-      link.setAttribute('href', url)
-      link.setAttribute('download', `usuarios-meetup-${new Date().toISOString().split('T')[0]}.csv`)
-      link.style.visibility = 'hidden'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      // Use the download function from client-side service
+      if (data.download) {
+        data.download();
+      } else {
+        // Fallback to manual CSV creation
+        const csvContent = data.csv || '';
+        
+        // Criar blob e fazer download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        if (link.download !== undefined) {
+          const url = URL.createObjectURL(blob)
+          link.setAttribute('href', url)
+          link.setAttribute('download', `inscricoes-meetup-${new Date().toISOString().split('T')[0]}.csv`)
+          link.style.visibility = 'hidden'
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+        }
+      }
       
     } catch (error: any) {
       alert('Erro ao exportar dados: ' + error.message)
