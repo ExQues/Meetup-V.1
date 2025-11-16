@@ -84,14 +84,15 @@ class ApiService {
 
     // Produção: usar função Netlify
     try {
-      const response = await fetch(`/.netlify/functions/submit`, {
+      const response = await fetch(`/.netlify/functions/submit-simple`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao enviar formulário');
+        const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+        throw new Error(errorData.error || 'Erro ao enviar formulário');
       }
 
       return response.json();
