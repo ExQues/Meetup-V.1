@@ -1,1 +1,4 @@
+/login-simple /.netlify/functions/login-simple 200
+/auth-login /.netlify/functions/auth-login 200
+/setup-admin-user /.netlify/functions/setup-admin-user 200
 /* /index.html 200

@@ -22,6 +22,7 @@ export default function AdminMeetup() {
     const token = localStorage.getItem('admin_token');
     return !!token;
   })
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -60,13 +61,14 @@ export default function AdminMeetup() {
     setLoading(true)
     
     try {
-      await apiService.login(password)
+      await apiService.login(email, password)
       setAuthed(true)
+      setEmail("")
       setPassword("")
       setError("")
     } catch (error: any) {
-      if (error.message.includes('Senha incorreta')) {
-        setError('Senha incorreta. Tente novamente.')
+      if (error.message.includes('Senha incorreta') || error.message.includes('Email incorreto')) {
+        setError('Email ou senha incorretos. Tente novamente.')
       } else {
         setError(error.message || "Erro ao fazer login")
       }
@@ -154,6 +156,22 @@ export default function AdminMeetup() {
 
           <DashboardCard>
             <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                  Email de Administrador
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@meetuptrae.com"
+                  className="w-full px-4 py-3 bg-black border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={loading}
+                  required
+                />
+              </div>
+              
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                   Senha de Administrador

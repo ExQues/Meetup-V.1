@@ -153,38 +153,74 @@ app.get('/api/health', async (req, res) => {
   }
 })
 
-// Rota de login SIMPLIFICADA para testes
+// Rota de login com email/senha usando Supabase
 app.post('/api/auth/login', async (req, res) => {
   try {
-    console.log('=== LOGIN SIMPLES ===')
-    const { password } = req.body
-    const adminPassword = process.env.ADMIN_PASSWORD
+    console.log('=== LOGIN COM EMAIL/SENHA ===')
+    const { email, password } = req.body
 
+    console.log('Email recebido:', email ? '✅ Presente' : '❌ Ausente')
     console.log('Password recebido:', password ? '✅ Presente' : '❌ Ausente')
-    console.log('ADMIN_PASSWORD:', adminPassword ? '✅ Configurado' : '❌ Ausente')
 
-    if (!adminPassword) {
-      console.error('❌ ADMIN_PASSWORD não configurado')
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email e senha são obrigatórios' })
+    }
+
+    if (!supabase) {
       return res.status(500).json({ 
-        error: 'Erro de configuração',
-        details: 'ADMIN_PASSWORD não configurado'
+        error: 'Supabase não configurado',
+        details: 'Verifique as variáveis de ambiente'
       })
     }
 
-    if (password !== adminPassword) {
+    // Buscar usuário no banco de dados
+    const { data: user, error: userError } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .eq('is_active', true)
+      .single()
+
+    if (userError || !user) {
+      console.log('❌ Usuário não encontrado ou inativo')
+      return res.status(401).json({ 
+        error: 'Email ou senha incorretos'
+      })
+    }
+
+    console.log('✅ Usuário encontrado:', user.email)
+
+    // Verificar senha (usando hash simples - Base64)
+    const expectedHash = Buffer.from(password).toString('base64')
+    const isPasswordValid = expectedHash === user.password_hash
+    
+    if (!isPasswordValid) {
       console.log('❌ Senha incorreta')
-      return res.status(401).json({ error: 'Senha incorreta' })
+      return res.status(401).json({ 
+        error: 'Email ou senha incorretos'
+      })
     }
 
     console.log('✅ Senha correta! Login bem sucedido!')
-    
-    // Criar token simples sem JWT para testes
-    const simpleToken = 'admin-token-' + Date.now()
+
+    // Atualizar último login
+    await supabase
+      .from('admin_users')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', user.id)
+
+    // Criar token com informações do usuário
+    const token = `admin-token-${user.id}-${Date.now()}`
     
     res.json({ 
-      token: simpleToken, 
+      token: token, 
       message: 'Login realizado com sucesso',
-      type: 'simple-token'
+      user: {
+        id: user.id,
+        email: user.email,
+        nome: user.nome,
+        role: user.role
+      }
     })
   } catch (error) {
     console.error('❌ Erro no login:', error)

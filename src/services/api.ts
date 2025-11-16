@@ -1,6 +1,9 @@
 // API service para comunicação com o backend
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5004/api';
 
+// Importar autenticação simples temporária
+import { simpleAuth } from './simple-auth';
+
 class ApiService {
   private getHeaders(): Record<string, string> {
     const token = localStorage.getItem('admin_token');
@@ -18,17 +21,30 @@ class ApiService {
     return response.json();
   }
 
-  // Autenticação
-  async login(password: string) {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
-    });
+  // Autenticação - usando Netlify function
+  async login(email: string, password: string) {
+    try {
+      const response = await fetch('/.netlify/functions/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
-    const data = await this.handleResponse(response);
-    localStorage.setItem('admin_token', data.token);
-    return data;
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Erro ao fazer login' }));
+        throw new Error(error.message || 'Erro ao fazer login');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        localStorage.setItem('admin_token', data.token);
+        return data;
+      } else {
+        throw new Error(data.message || 'Erro ao fazer login');
+      }
+    } catch (error: any) {
+      throw new Error(error.message || 'Erro ao fazer login');
+    }
   }
 
   logout() {
