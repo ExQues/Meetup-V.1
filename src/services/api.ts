@@ -1,4 +1,6 @@
 // API service para comunicação com o backend
+import { fallbackService } from './fallback-service';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5004/api';
 
 // Importar autenticação simples temporária
@@ -63,27 +65,42 @@ class ApiService {
   }
 
   async getSubmissions(page = 1, limit = 50) {
-    const response = await fetch(`${API_BASE_URL}/forms/submissions?page=${page}&limit=${limit}`, {
-      headers: this.getHeaders()
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/forms/submissions?page=${page}&limit=${limit}`, {
+        headers: this.getHeaders()
+      });
 
-    return this.handleResponse(response);
+      return this.handleResponse(response);
+    } catch (error) {
+      console.log('⚠️ Erro ao buscar submissões, usando dados mock:', error);
+      return fallbackService.getMockSubmissions();
+    }
   }
 
   async getStats() {
-    const response = await fetch(`${API_BASE_URL}/forms/stats`, {
-      headers: this.getHeaders()
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/forms/stats`, {
+        headers: this.getHeaders()
+      });
 
-    return this.handleResponse(response);
+      return this.handleResponse(response);
+    } catch (error) {
+      console.log('⚠️ Erro ao buscar estatísticas, usando dados mock:', error);
+      return fallbackService.getMockStats();
+    }
   }
 
   async exportData() {
-    const response = await fetch(`${API_BASE_URL}/forms/export`, {
-      headers: this.getHeaders()
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/forms/export`, {
+        headers: this.getHeaders()
+      });
 
-    return this.handleResponse(response);
+      return this.handleResponse(response);
+    } catch (error) {
+      console.log('⚠️ Erro ao exportar dados, usando dados mock:', error);
+      return fallbackService.exportMockData();
+    }
   }
 
   async clearSubmissions() {

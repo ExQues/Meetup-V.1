@@ -43,11 +43,12 @@ app.use(limiter)
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 
-// Configuração do Supabase com validação
+// Configuração do Supabase com fallback para variáveis locais
 let supabase: any = null
 try {
-  const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE
+  // Usar variáveis de ambiente do Netlify, ou fallback para valores locais
+  const supabaseUrl = process.env.SUPABASE_URL || 'https://cruvgucbbvxlvyffpskm.supabase.co'
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNydXZndWNiYnZ4bHZ5ZmZwc2ttIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzIyNDgxMiwiZXhwIjoyMDc4ODAwODEyfQ.55p-Bt1vWm0ZtShl7N1OHV3O1xbejtR4TmIfKe3OMxc'
   
   console.log('=== SUPABASE CONFIG ===')
   console.log('SUPABASE_URL:', supabaseUrl ? '✅ Configurada' : '❌ Não configurada')

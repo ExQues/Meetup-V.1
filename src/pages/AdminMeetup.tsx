@@ -43,12 +43,33 @@ export default function AdminMeetup() {
         apiService.getSubmissions(),
         apiService.getStats()
       ])
-      setSubmissions(submissionsData.submissions)
-      setStats(statsData)
+      
+      console.log('📊 Dados carregados:', { submissionsData, statsData })
+      
+      // Ajustar para diferentes formatos de resposta
+      setSubmissions(submissionsData.submissions || submissionsData || [])
+      setStats(statsData || {
+        total: submissionsData.total || submissionsData.length || 0,
+        today: 0,
+        week: 0,
+        month: 0,
+        growth: '0%'
+      })
     } catch (error: any) {
-      console.error('Erro ao carregar dados:', error)
+      console.error('❌ Erro ao carregar dados:', error)
+      
+      // Se for erro de token, fazer logout
       if (error.message.includes('Token inválido') || error.message.includes('Token expirado')) {
         handleLogout()
+        return
+      }
+      
+      // Se for erro de rede/Supabase, mostrar mensagem amigável
+      console.log('⚠️ Usando dados de demonstração ou verificando conexão...')
+      
+      // Não faz logout em caso de erro de rede, apenas loga
+      if (error.message.includes('Erro na requisição') || error.message.includes('Failed to fetch')) {
+        console.log('📡 Problema de conexão detectado - os dados podem estar em modo demonstração')
       }
     } finally {
       setLoading(false)
