@@ -11,7 +11,10 @@ export interface Submission {
 export interface Stats {
   total: number;
   today: number;
-  week: number;
+  thisWeek: number;
+  month?: number;
+  growth?: string;
+  lastSubmission?: Submission | null;
 }
 
 class ClientDataService {
@@ -123,7 +126,10 @@ class ClientDataService {
     return {
       total: submissions.length,
       today: todayCount,
-      week: weekCount
+      thisWeek: weekCount,
+      month: 0,
+      growth: '0%',
+      lastSubmission: submissions.length > 0 ? submissions[0] : null
     };
   }
 

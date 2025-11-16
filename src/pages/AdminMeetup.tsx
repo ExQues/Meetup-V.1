@@ -47,13 +47,17 @@ export default function AdminMeetup() {
       console.log('📊 Dados carregados:', { submissionsData, statsData })
       
       // Ajustar para diferentes formatos de resposta
-      setSubmissions(submissionsData.submissions || submissionsData || [])
+      const submissions = submissionsData?.submissions || submissionsData || []
+      const total = submissionsData?.total || submissions?.length || 0
+      
+      setSubmissions(submissions)
       setStats(statsData || {
-        total: submissionsData.total || submissionsData.length || 0,
+        total: total,
         today: 0,
-        week: 0,
+        thisWeek: 0,
         month: 0,
-        growth: '0%'
+        growth: '0%',
+        lastSubmission: submissions.length > 0 ? submissions[0] : null
       })
     } catch (error: any) {
       console.error('❌ Erro ao carregar dados:', error)
@@ -66,6 +70,17 @@ export default function AdminMeetup() {
       
       // Se for erro de rede/Supabase, mostrar mensagem amigável
       console.log('⚠️ Usando dados de demonstração ou verificando conexão...')
+      
+      // Garantir que sempre tenhamos dados válidos mesmo em caso de erro
+      setSubmissions([])
+      setStats({
+        total: 0,
+        today: 0,
+        thisWeek: 0,
+        month: 0,
+        growth: '0%',
+        lastSubmission: null
+      })
       
       // Não faz logout em caso de erro de rede, apenas loga
       if (error.message.includes('Erro na requisição') || error.message.includes('Failed to fetch')) {
