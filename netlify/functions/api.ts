@@ -24,6 +24,11 @@ export async function handler(event: any) {
     };
   }
 
+  // Debug: verificar variáveis de ambiente
+  console.log('🔍 Debug - Variáveis de ambiente:');
+  console.log('SUPABASE_URL:', process.env.VITE_SUPABASE_URL ? '✅ Configurada' : '❌ Ausente');
+  console.log('SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ Ausente');
+
   const { httpMethod, body, path } = event;
   const url = new URL(event.rawUrl);
   const pathSegments = url.pathname.split('/');
@@ -42,14 +47,19 @@ export async function handler(event: any) {
 
   // Rota de submissão do formulário
   if (endpoint === 'submit' && httpMethod === 'POST') {
+    console.log('📋 Recebendo submissão:', data);
+    
     // Validar dados básicos
     if (!data.nome || !data.email) {
+      console.log('❌ Dados inválidos:', { nome: !!data.nome, email: !!data.email });
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ error: 'Nome e email são obrigatórios' })
       };
     }
+    
+    console.log('✅ Dados válidos, conectando ao Supabase...');
 
     // Verificar se o email já existe
     const { data: existingData, error: checkError } = await supabase

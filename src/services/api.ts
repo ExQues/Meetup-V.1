@@ -35,6 +35,9 @@ class ApiService {
   // Enviar formulário
   async submitForm(data: any) {
     try {
+      console.log('🚀 Enviando dados para:', `${API_BASE_URL}/submit`);
+      console.log('📦 Dados:', data);
+      
       const response = await fetch(`${API_BASE_URL}/submit`, {
         method: 'POST',
         headers: {
@@ -42,9 +45,17 @@ class ApiService {
         },
         body: JSON.stringify(data),
       });
+      
+      console.log('📨 Resposta:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('❌ Erro na resposta:', errorText);
+      }
+      
       return this.handleResponse(response);
     } catch (error) {
-      console.error('Erro ao enviar formulário:', error);
+      console.error('❌ Erro ao enviar formulário:', error);
       throw error;
     }
   }
