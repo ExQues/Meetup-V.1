@@ -40,7 +40,7 @@ export default function Formulario() {
       nextErrors.telefone = "Telefone deve ter 10 ou 11 dígitos.";
     }
     
-    // Validação de Discord
+    // Validação de Discord (obrigatório)
     if (!form.discord.trim()) {
       nextErrors.discord = "Informe seu usuário do Discord.";
     } else if (!/^[a-zA-Z0-9_.#]+$/.test(form.discord.trim())) {

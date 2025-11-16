@@ -1,7 +1,7 @@
 import { Calendar, Clock, Wifi, Users, Zap, Star, ArrowRight, Sparkles, Code, Terminal, Square } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { BackgroundBeams } from '@/components/ui/background-beams'
-import { TypingText } from '@/components/TypingText'
+import { TypingText } from '@/components/common/TypingText'
 import { useEffect, useRef, FC, ReactNode } from 'react'
 import { Card } from '@/components/ui/card'
 
