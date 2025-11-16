@@ -21,61 +21,29 @@ class ClientDataService {
   private readonly STORAGE_KEY = 'meetup_submissions';
   private readonly MOCK_DATA_KEY = 'mock_data_initialized';
 
-  // Initialize with mock data if not already done
-  private initializeMockData(): void {
-    if (!localStorage.getItem(this.MOCK_DATA_KEY)) {
-      const mockSubmissions: Submission[] = [
-        {
-          id: '1',
-          nome: 'João Silva',
-          email: 'joao@example.com',
-          telefone: '(11) 98765-4321',
-          discord: 'joao_silva',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          nome: 'Maria Santos',
-          email: 'maria@example.com',
-          telefone: '(21) 99876-5432',
-          discord: 'maria_santos',
-          created_at: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: '3',
-          nome: 'Pedro Oliveira',
-          email: 'pedro@example.com',
-          telefone: '(31) 91234-5678',
-          discord: 'pedro_oliveira',
-          created_at: new Date(Date.now() - 172800000).toISOString()
-        },
-        {
-          id: '4',
-          nome: 'Ana Costa',
-          email: 'ana@example.com',
-          telefone: '(41) 92345-6789',
-          discord: 'ana_costa',
-          created_at: new Date(Date.now() - 259200000).toISOString()
-        },
-        {
-          id: '5',
-          nome: 'Carlos Mendes',
-          email: 'carlos@example.com',
-          telefone: '(51) 93456-7890',
-          discord: 'carlos_mendes',
-          created_at: new Date(Date.now() - 345600000).toISOString()
-        }
-      ];
-      
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(mockSubmissions));
-      localStorage.setItem(this.MOCK_DATA_KEY, 'true');
+  constructor() {
+    // Limpar dados mock antigos na inicialização
+    this.clearOldMockData();
+  }
+
+  // Limpar dados mock antigos
+  private clearOldMockData(): void {
+    const data = localStorage.getItem(this.STORAGE_KEY);
+    if (data) {
+      const submissions: Submission[] = JSON.parse(data);
+      // Verificar se tem dados mock (emails com @example.com)
+      const hasMockData = submissions.some(s => s.email.includes('@example.com'));
+      if (hasMockData) {
+        console.log('🧹 Limpando dados mock antigos...');
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify([]));
+      }
     }
+    localStorage.removeItem(this.MOCK_DATA_KEY);
   }
 
   // Get all submissions
   getSubmissions(page = 1, limit = 50): { submissions: Submission[]; total: number; page: number; totalPages: number } {
-    this.initializeMockData();
-    
+    // Não inicializar mock data automaticamente - mostrar dados reais
     const data = localStorage.getItem(this.STORAGE_KEY);
     const allSubmissions: Submission[] = data ? JSON.parse(data) : [];
     
@@ -99,8 +67,7 @@ class ClientDataService {
 
   // Get statistics
   getStats(): Stats {
-    this.initializeMockData();
-    
+    // Não inicializar mock data automaticamente - mostrar estatísticas reais
     const data = localStorage.getItem(this.STORAGE_KEY);
     const submissions: Submission[] = data ? JSON.parse(data) : [];
     
@@ -135,7 +102,7 @@ class ClientDataService {
 
   // Add new submission (when someone submits the form)
   addSubmission(submission: Omit<Submission, 'id' | 'created_at'>): Submission {
-    this.initializeMockData();
+    // REMOVIDO: Não inicializar mais com dados mock
     
     const data = localStorage.getItem(this.STORAGE_KEY);
     const submissions: Submission[] = data ? JSON.parse(data) : [];

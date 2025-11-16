@@ -57,8 +57,18 @@ class ApiService {
 
   // Submissões
   async submitForm(formData: any) {
+    // Sempre usar client-side service para desenvolvimento local
+    if (!import.meta.env.PROD) {
+      console.log('📝 Desenvolvimento local: usando client-side service');
+      const result = clientDataService.addSubmission(formData);
+      return {
+        message: 'Formulário enviado com sucesso!',
+        id: result.id
+      };
+    }
+
     try {
-      // Try using the Netlify function first
+      // Try using the Netlify function first (only in production)
       const response = await fetch(`/.netlify/functions/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
