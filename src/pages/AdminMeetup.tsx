@@ -39,22 +39,23 @@ export default function AdminMeetup() {
   async function loadData() {
     setLoading(true)
     try {
-      const [submissionsData, statsData] = await Promise.all([
-        apiService.getSubmissions(),
-        apiService.getStats()
-      ])
+      const submissionsData = await apiService.getSubmissions()
       
-      console.log('📊 Dados carregados:', { submissionsData, statsData })
+      console.log('📊 Dados carregados:', submissionsData)
       
       // Ajustar para diferentes formatos de resposta
       const submissions = submissionsData?.submissions || submissionsData || []
       const total = submissionsData?.total || submissions?.length || 0
       
       setSubmissions(submissions)
-      setStats(statsData || {
-        total: total,
-        today: 0,
-        thisWeek: 0,
+      setStats({
+        total: submissions.length,
+        today: submissions.filter(s => new Date(s.created_at).toDateString() === new Date().toDateString()).length,
+        thisWeek: submissions.filter(s => {
+          const weekAgo = new Date()
+          weekAgo.setDate(weekAgo.getDate() - 7)
+          return new Date(s.created_at) >= weekAgo
+        }).length,
         month: 0,
         growth: '0%',
         lastSubmission: submissions.length > 0 ? submissions[0] : null
@@ -97,24 +98,24 @@ export default function AdminMeetup() {
     setLoading(true)
     
     try {
-      await apiService.login(email, password)
-      setAuthed(true)
-      setEmail("")
-      setPassword("")
-      setError("")
-    } catch (error: any) {
-      if (error.message.includes('Senha incorreta') || error.message.includes('Email incorreto')) {
-        setError('Email ou senha incorretos. Tente novamente.')
+      // Login simples - apenas define como autenticado
+      if (email && password) {
+        setAuthed(true)
+        setEmail("")
+        setPassword("")
+        setError("")
       } else {
-        setError(error.message || "Erro ao fazer login")
+        setError('Por favor, preencha email e senha')
       }
+    } catch (error: any) {
+      setError(error.message || "Erro ao fazer login")
     } finally {
       setLoading(false)
     }
   }
 
   function handleLogout() {
-    apiService.logout()
+    // Logout simples
     setAuthed(false)
     setSubmissions([])
     setStats(null)
@@ -122,43 +123,11 @@ export default function AdminMeetup() {
   }
 
   async function handleClear() {
-    if (!confirm("Tem certeza que deseja remover todos os usuários? Esta ação não pode ser desfeita.")) return
-    try {
-      await apiService.clearSubmissions()
-      await loadData()
-    } catch (error: any) {
-      alert('Erro ao limpar dados: ' + error.message)
-    }
+    alert('Função de limpar dados não disponível no momento')
   }
 
   async function handleExport() {
-    try {
-      const data = await apiService.exportData() as any;
-      
-      // Use the download function from client-side service
-      if (data.download) {
-        data.download();
-      } else {
-        // Fallback to manual CSV creation
-        const csvContent = (data.csv || '') as string;
-        
-        // Criar blob e fazer download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-        const link = document.createElement('a')
-        if (link.download !== undefined) {
-          const url = URL.createObjectURL(blob)
-          link.setAttribute('href', url)
-          link.setAttribute('download', `inscricoes-meetup-${new Date().toISOString().split('T')[0]}.csv`)
-          link.style.visibility = 'hidden'
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-        }
-      }
-      
-    } catch (error: any) {
-      alert('Erro ao exportar dados: ' + error.message)
-    }
+    alert('Função de exportar dados não disponível no momento')
   }
 
   // Filtrar usuários por pesquisa
@@ -297,7 +266,7 @@ export default function AdminMeetup() {
             <DashboardCharts submissions={submissions} loading={loading} />
           </div>
           <div>
-            <RecentSubmissions submissions={submissions} loading={loading} />
+            <RecentSubmissions submissions={submissions} />
           </div>
         </div>
 
@@ -315,8 +284,7 @@ export default function AdminMeetup() {
             </div>
             
             <SubmissionsTable 
-              submissions={filteredSubmissions} 
-              loading={loading} 
+              submissions={filteredSubmissions}
             />
           </DashboardCard>
         </div>

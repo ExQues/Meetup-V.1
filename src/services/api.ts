@@ -49,9 +49,15 @@ class ApiService {
     }
   }
 
-  // Buscar inscrições (será implementado)
+  // Buscar inscrições
   async getSubmissions() {
-    throw new Error('Função ainda não implementada');
+    try {
+      const response = await fetch(`${API_BASE_URL}/inscricoes`);
+      return this.handleResponse(response);
+    } catch (error) {
+      console.error('Erro ao buscar inscrições:', error);
+      throw error;
+    }
   }
 
   // Login admin (será implementado)
