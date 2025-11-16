@@ -1,82 +1,90 @@
-import { createClient } from '@supabase/supabase-js';
-
-// Configuração do Supabase
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE!;
-
-// Criar cliente Supabase
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  }
-});
-
 export const handler = async (event: any) => {
   // Verificar autenticação
   const authHeader = event.headers.authorization || event.headers.Authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return {
       statusCode: 401,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS'
+      },
       body: JSON.stringify({ error: 'Token de autenticação necessário' })
     };
   }
 
   const token = authHeader.split(' ')[1];
   
-  // Verificar token (simplificado)
+  // Verificar token
   if (token !== process.env.ADMIN_TOKEN) {
     return {
       statusCode: 401,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS'
+      },
       body: JSON.stringify({ error: 'Token inválido' })
     };
   }
 
   try {
-    // Obter data atual e início da semana (domingo)
+    // Obter data atual e início da semana
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay()); // Domingo
     startOfWeek.setHours(0, 0, 0, 0);
 
-    // Buscar todas as estatísticas em paralelo
-    const [
-      totalResult,
-      todayResult,
-      weekResult,
-      lastSubmissionResult
-    ] = await Promise.all([
+    // Buscar estatísticas do Supabase usando fetch direto
+    const [totalResponse, todayResponse, weekResponse, lastResponse] = await Promise.all([
       // Total de submissões
-      supabase
-        .from('submissions')
-        .select('*', { count: 'exact', head: true }),
+      fetch(`${process.env.SUPABASE_URL}/rest/v1/submissions?select=*`, {
+        headers: {
+          'apikey': process.env.SUPABASE_ANON_KEY!,
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE!}`,
+          'Content-Type': 'application/json'
+        }
+      }),
       
       // Submissões de hoje
-      supabase
-        .from('submissions')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', startOfDay.toISOString()),
+      fetch(`${process.env.SUPABASE_URL}/rest/v1/submissions?select=*&created_at=gte.${startOfDay.toISOString()}`, {
+        headers: {
+          'apikey': process.env.SUPABASE_ANON_KEY!,
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE!}`,
+          'Content-Type': 'application/json'
+        }
+      }),
       
-      // Submissões da semana (desde domingo)
-      supabase
-        .from('submissions')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', startOfWeek.toISOString()),
+      // Submissões da semana
+      fetch(`${process.env.SUPABASE_URL}/rest/v1/submissions?select=*&created_at=gte.${startOfWeek.toISOString()}`, {
+        headers: {
+          'apikey': process.env.SUPABASE_ANON_KEY!,
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE!}`,
+          'Content-Type': 'application/json'
+        }
+      }),
       
-      // Última submissão com dados completos
-      supabase
-        .from('submissions')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
+      // Última submissão
+      fetch(`${process.env.SUPABASE_URL}/rest/v1/submissions?select=*&order=created_at.desc&limit=1`, {
+        headers: {
+          'apikey': process.env.SUPABASE_ANON_KEY!,
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE!}`,
+          'Content-Type': 'application/json'
+        }
+      })
     ]);
 
-    // Verificar erros individuais
-    if (totalResult.error) throw new Error(`Erro ao buscar total: ${totalResult.error.message}`);
-    if (todayResult.error) throw new Error(`Erro ao buscar de hoje: ${todayResult.error.message}`);
-    if (weekResult.error) throw new Error(`Erro ao buscar da semana: ${weekResult.error.message}`);
+    if (!totalResponse.ok || !todayResponse.ok || !weekResponse.ok || !lastResponse.ok) {
+      throw new Error('Erro ao buscar dados do Supabase');
+    }
+
+    const totalData = await totalResponse.json();
+    const todayData = await todayResponse.json();
+    const weekData = await weekResponse.json();
+    const lastData = await lastResponse.json();
 
     return {
       statusCode: 200,
@@ -84,13 +92,13 @@ export const handler = async (event: any) => {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Access-Control-Allow-Methods': 'GET'
+        'Access-Control-Allow-Methods': 'GET, OPTIONS'
       },
       body: JSON.stringify({
-        total: totalResult.count || 0,
-        today: todayResult.count || 0,
-        thisWeek: weekResult.count || 0,
-        lastSubmission: lastSubmissionResult.data || null,
+        total: totalData.length || 0,
+        today: todayData.length || 0,
+        thisWeek: weekData.length || 0,
+        lastSubmission: lastData[0] || null,
       })
     };
 
@@ -101,7 +109,9 @@ export const handler = async (event: any) => {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS'
       },
       body: JSON.stringify({ 
         error: 'Erro ao buscar estatísticas: ' + error.message 

@@ -108,7 +108,7 @@ class ApiService {
   async getSubmissions(page = 1, limit = 50) {
     try {
       // Try using the individual Netlify function first
-      const response = await fetch(`/.netlify/functions/submissions-simple?page=${page}&limit=${limit}`, {
+      const response = await fetch(`/.netlify/functions/submissions?page=${page}&limit=${limit}`, {
         headers: this.getHeaders()
       });
 
@@ -127,7 +127,7 @@ class ApiService {
   async getStats() {
     try {
       // Try using the individual Netlify function first
-      const response = await fetch(`/.netlify/functions/stats-simple`, {
+      const response = await fetch(`/.netlify/functions/stats`, {
         headers: this.getHeaders()
       });
 
