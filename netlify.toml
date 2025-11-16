@@ -18,6 +18,7 @@
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["@supabase/supabase-js"]
+  included_files = ["node_modules/**/*"]
 
 [[headers]]
   for = "/*"
