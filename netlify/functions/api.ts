@@ -1,7 +1,7 @@
-// Função simplificada para evitar problemas de tamanho
-import { createClient } from '@supabase/supabase-js';
+// Função ultra-simplificada usando fetch direto para Supabase
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 
-// Headers CORS
 const headers = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -11,139 +11,94 @@ const headers = {
 
 export async function handler(event: any) {
   try {
-    // Handle OPTIONS request for CORS preflight
     if (event.httpMethod === 'OPTIONS') {
-      return {
-        statusCode: 200,
-        headers,
-        body: ''
-      };
+      return { statusCode: 200, headers, body: '' };
     }
 
     console.log('🚀 Função iniciada');
     console.log('📋 Método:', event.httpMethod);
-    console.log('🎯 Endpoint:', event.path);
+    console.log('🎯 Path:', event.path);
 
-    // Verificar variáveis de ambiente
-    const supabaseUrl = process.env.VITE_SUPABASE_URL;
-    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
       console.log('❌ Variáveis não configuradas');
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'Configuração incompleta' })
-      };
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Config incompleta' }) };
     }
 
-    // Criar cliente Supabase
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Parse do body
-    let data;
-    try {
-      data = JSON.parse(event.body || '{}');
-    } catch (e) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'JSON inválido' })
-      };
-    }
-
-    console.log('📦 Dados recebidos:', data);
-
-    // Rota de submissão
     if (event.httpMethod === 'POST' && event.path === '/api/submit') {
-      // Validação básica
+      const data = JSON.parse(event.body || '{}');
+      console.log('📦 Dados:', data);
+
       if (!data.nome || !data.email) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: 'Nome e email obrigatórios' })
-        };
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Nome e email obrigatórios' }) };
       }
 
       try {
-        // Verificar email duplicado
-        const { data: existing } = await supabase
-          .from('inscricoes')
-          .select('email')
-          .eq('email', data.email)
-          .single();
+        // Verificar se email já existe
+        const checkResponse = await fetch(`${SUPABASE_URL}/rest/v1/inscricoes?email=eq.${data.email}&select=email`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+          }
+        });
 
-        if (existing) {
-          return {
-            statusCode: 400,
-            headers,
-            body: JSON.stringify({ error: 'Email já cadastrado' })
-          };
+        if (checkResponse.ok) {
+          const existing = await checkResponse.json();
+          if (existing.length > 0) {
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email já cadastrado' }) };
+          }
         }
-      } catch (e) {
-        // Email não existe, pode prosseguir
+
+        // Inserir novo registro
+        const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/inscricoes`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            nome: data.nome,
+            email: data.email,
+            telefone: data.telefone || null,
+            discord: data.discord || null
+          })
+        });
+
+        if (!insertResponse.ok) {
+          const errorText = await insertResponse.text();
+          console.log('❌ Erro ao inserir:', errorText);
+          return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erro ao salvar' }) };
+        }
+
+        return { statusCode: 200, headers, body: JSON.stringify({ message: 'Sucesso' }) };
+
+      } catch (error) {
+        console.log('❌ Erro na requisição:', error);
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erro na conexão' }) };
       }
-
-      // Inserir dados
-      const { error } = await supabase
-        .from('inscricoes')
-        .insert([{
-          nome: data.nome,
-          email: data.email,
-          telefone: data.telefone || null,
-          discord: data.discord || null
-        }]);
-
-      if (error) {
-        console.log('❌ Erro ao inserir:', error);
-        return {
-          statusCode: 500,
-          headers,
-          body: JSON.stringify({ error: 'Erro ao salvar' })
-        };
-      }
-
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ message: 'Sucesso' })
-      };
     }
 
-    // Rota para listar (admin)
     if (event.httpMethod === 'GET' && event.path === '/api/inscricoes') {
-      const { data: inscricoes, error } = await supabase
-        .from('inscricoes')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/inscricoes?order=created_at.desc`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+        }
+      });
 
-      if (error) {
-        return {
-          statusCode: 500,
-          headers,
-          body: JSON.stringify({ error: 'Erro ao buscar' })
-        };
+      if (!response.ok) {
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erro ao buscar' }) };
       }
 
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ data: inscricoes })
-      };
+      const data = await response.json();
+      return { statusCode: 200, headers, body: JSON.stringify({ data }) };
     }
 
-    return {
-      statusCode: 404,
-      headers,
-      body: JSON.stringify({ error: 'Rota não encontrada' })
-    };
+    return { statusCode: 404, headers, body: JSON.stringify({ error: 'Rota não encontrada' }) };
 
   } catch (error) {
     console.log('❌ Erro global:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Erro interno' })
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erro interno' }) };
   }
 }
