@@ -118,14 +118,14 @@ export default function AdminMeetup() {
 
   async function handleExport() {
     try {
-      const data = await apiService.exportData()
+      const data = await apiService.exportData() as any;
       
       // Use the download function from client-side service
       if (data.download) {
         data.download();
       } else {
         // Fallback to manual CSV creation
-        const csvContent = data.csv || '';
+        const csvContent = (data.csv || '') as string;
         
         // Criar blob e fazer download
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
