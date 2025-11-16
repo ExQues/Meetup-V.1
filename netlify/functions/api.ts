@@ -1,15 +1,4 @@
-// Resolver problema do punycode no Netlify
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
-try {
-  // Tenta importar punycode se disponível
-  const punycode = require('punycode/');
-  (global as any).punycode = punycode;
-} catch (e) {
-  // Ignora se não estiver disponível
-}
-
+// Função simplificada para evitar problemas de tamanho
 import { createClient } from '@supabase/supabase-js';
 
 // Headers CORS
@@ -31,36 +20,31 @@ export async function handler(event: any) {
       };
     }
 
-    // Debug: verificar variáveis de ambiente
-    console.log('🔍 Debug - Variáveis de ambiente:');
-    console.log('SUPABASE_URL:', process.env.VITE_SUPABASE_URL ? '✅ Configurada' : '❌ Ausente');
-    console.log('SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY ? '✅ Configurada' : '❌ Ausente');
+    console.log('🚀 Função iniciada');
+    console.log('📋 Método:', event.httpMethod);
+    console.log('🎯 Endpoint:', event.path);
 
-    // Verificar se as variáveis estão configuradas
-    if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) {
-      console.log('❌ Erro: Variáveis de ambiente não configuradas');
+    // Verificar variáveis de ambiente
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.log('❌ Variáveis não configuradas');
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'Configuração do servidor incompleta' })
+        body: JSON.stringify({ error: 'Configuração incompleta' })
       };
     }
 
-    // Configurar Supabase
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.VITE_SUPABASE_ANON_KEY!
-    );
+    // Criar cliente Supabase
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { httpMethod, body } = event;
-    const url = new URL(event.rawUrl);
-    const pathSegments = url.pathname.split('/');
-    const endpoint = pathSegments[pathSegments.length - 1];
-
+    // Parse do body
     let data;
     try {
-      data = body ? JSON.parse(body) : {};
-    } catch (error) {
+      data = JSON.parse(event.body || '{}');
+    } catch (e) {
       return {
         statusCode: 400,
         headers,
@@ -68,38 +52,39 @@ export async function handler(event: any) {
       };
     }
 
-    // Rota de submissão do formulário
-    if (endpoint === 'submit' && httpMethod === 'POST') {
-      console.log('📋 Recebendo submissão:', data);
-      
-      // Validar dados básicos
+    console.log('📦 Dados recebidos:', data);
+
+    // Rota de submissão
+    if (event.httpMethod === 'POST' && event.path === '/api/submit') {
+      // Validação básica
       if (!data.nome || !data.email) {
-        console.log('❌ Dados inválidos:', { nome: !!data.nome, email: !!data.email });
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: 'Nome e email são obrigatórios' })
-        };
-      }
-      
-      console.log('✅ Dados válidos, conectando ao Supabase...');
-
-      // Verificar se o email já existe
-      const { data: existingData, error: checkError } = await supabase
-        .from('inscricoes')
-        .select('email')
-        .eq('email', data.email)
-        .single();
-
-      if (existingData) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: 'Email já cadastrado' })
+          body: JSON.stringify({ error: 'Nome e email obrigatórios' })
         };
       }
 
-      // Inserir nova inscrição
+      try {
+        // Verificar email duplicado
+        const { data: existing } = await supabase
+          .from('inscricoes')
+          .select('email')
+          .eq('email', data.email)
+          .single();
+
+        if (existing) {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'Email já cadastrado' })
+          };
+        }
+      } catch (e) {
+        // Email não existe, pode prosseguir
+      }
+
+      // Inserir dados
       const { error } = await supabase
         .from('inscricoes')
         .insert([{
@@ -110,23 +95,23 @@ export async function handler(event: any) {
         }]);
 
       if (error) {
-        console.log('❌ Erro ao inserir no banco:', error);
+        console.log('❌ Erro ao inserir:', error);
         return {
           statusCode: 500,
           headers,
-          body: JSON.stringify({ error: 'Erro ao salvar no banco de dados' })
+          body: JSON.stringify({ error: 'Erro ao salvar' })
         };
       }
 
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ message: 'Inscrição realizada com sucesso' })
+        body: JSON.stringify({ message: 'Sucesso' })
       };
     }
 
-    // Rota para listar inscrições (para admin)
-    if (endpoint === 'inscricoes' && httpMethod === 'GET') {
+    // Rota para listar (admin)
+    if (event.httpMethod === 'GET' && event.path === '/api/inscricoes') {
       const { data: inscricoes, error } = await supabase
         .from('inscricoes')
         .select('*')
@@ -136,7 +121,7 @@ export async function handler(event: any) {
         return {
           statusCode: 500,
           headers,
-          body: JSON.stringify({ error: 'Erro ao buscar inscrições' })
+          body: JSON.stringify({ error: 'Erro ao buscar' })
         };
       }
 
@@ -154,11 +139,11 @@ export async function handler(event: any) {
     };
 
   } catch (error) {
-    console.log('❌ Erro global na função:', error);
+    console.log('❌ Erro global:', error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Erro interno do servidor' })
+      body: JSON.stringify({ error: 'Erro interno' })
     };
   }
 }
