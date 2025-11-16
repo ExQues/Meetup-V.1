@@ -1,89 +1,87 @@
-import { Handler } from '@netlify/functions'
+import { createClient } from '@supabase/supabase-js';
 
-const headers = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Content-Type': 'application/json',
-}
+// Configuração do Supabase
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE!;
 
-const handler: Handler = async (event, context) => {
-  // Handle preflight requests
-  if (event.httpMethod === 'OPTIONS') {
+// Criar cliente Supabase
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  }
+});
+
+export const handler = async (event: any) => {
+  // Verificar autenticação
+  const authHeader = event.headers.authorization || event.headers.Authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ message: 'OK' })
-    }
+      statusCode: 401,
+      body: JSON.stringify({ error: 'Token de autenticação necessário' })
+    };
+  }
+
+  const token = authHeader.split(' ')[1];
+  
+  // Verificar token (simplificado - você pode querer verificar contra um banco de dados)
+  if (token !== process.env.ADMIN_TOKEN) {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ error: 'Token inválido' })
+    };
   }
 
   try {
-    // Simple authentication check
-    const authHeader = event.headers['authorization'] || event.headers['Authorization']
-    if (!authHeader) {
-      return {
-        statusCode: 401,
-        headers,
-        body: JSON.stringify({ error: 'Token não fornecido' })
-      }
+    const url = new URL(event.rawUrl || `http://localhost${event.path}`, 'http://localhost');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '50');
+    const offset = (page - 1) * limit;
+
+    // Buscar submissões com paginação
+    const { data, error, count } = await supabase
+      .from('submissions')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      throw error;
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    if (!token.startsWith('admin-token-')) {
-      return {
-        statusCode: 403,
-        headers,
-        body: JSON.stringify({ error: 'Token inválido' })
-      }
-    }
-
-    // Return mock data for now
-    const mockData = {
-      submissions: [
-        {
-          id: '1',
-          nome: 'João Silva',
-          email: 'joao@example.com',
-          telefone: '(11) 98765-4321',
-          discord: 'joao_silva',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          nome: 'Maria Santos',
-          email: 'maria@example.com',
-          telefone: '(21) 99876-5432',
-          discord: 'maria_santos',
-          created_at: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: '3',
-          nome: 'Pedro Oliveira',
-          email: 'pedro@example.com',
-          telefone: '(31) 91234-5678',
-          discord: 'pedro_oliveira',
-          created_at: new Date(Date.now() - 172800000).toISOString()
-        }
-      ],
-      total: 3,
-      page: 1,
-      totalPages: 1
-    }
+    const totalPages = Math.ceil((count || 0) / limit);
 
     return {
       statusCode: 200,
-      headers,
-      body: JSON.stringify(mockData)
-    }
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'GET'
+      },
+      body: JSON.stringify({
+        submissions: data || [],
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages
+        }
+      })
+    };
 
-  } catch (error) {
-    console.error('Error in submissions function:', error)
+  } catch (error: any) {
+    console.error('Erro ao buscar submissões:', error);
+    
     return {
       statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Erro interno do servidor' })
-    }
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({ 
+        error: 'Erro ao buscar submissões: ' + error.message 
+      })
+    };
   }
-}
-
-export { handler }
+};

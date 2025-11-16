@@ -57,18 +57,33 @@ class ApiService {
 
   // Submissões
   async submitForm(formData: any) {
-    // Sempre usar client-side service para desenvolvimento local
+    // Desenvolvimento: tentar backend local primeiro e cair para client-side se falhar
     if (!import.meta.env.PROD) {
-      console.log('📝 Desenvolvimento local: usando client-side service');
-      const result = clientDataService.addSubmission(formData);
-      return {
-        message: 'Formulário enviado com sucesso!',
-        id: result.id
-      };
+      try {
+        const response = await fetch(`${API_BASE_URL}/forms/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error || 'Erro ao enviar formulário');
+        }
+
+        return response.json();
+      } catch (error) {
+        console.log('⚠️ Erro ao enviar para API local, usando client-side service:', error);
+        const result = clientDataService.addSubmission(formData);
+        return {
+          message: 'Formulário enviado com sucesso!',
+          id: result.id
+        };
+      }
     }
 
+    // Produção: usar função Netlify
     try {
-      // Try using the Netlify function first (only in production)
       const response = await fetch(`/.netlify/functions/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,7 +97,6 @@ class ApiService {
       return response.json();
     } catch (error) {
       console.log('⚠️ Erro ao enviar formulário, usando client-side service:', error);
-      // Use client-side service as fallback
       const result = clientDataService.addSubmission(formData);
       return {
         message: 'Formulário enviado com sucesso!',
