@@ -1,7 +1,8 @@
 // API service para comunicação com o backend
 import { fallbackService } from './fallback-service';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5004/api';
+// Usar Netlify functions em produção, localhost apenas para desenvolvimento local
+const API_BASE_URL = import.meta.env.PROD ? '/.netlify/functions/api' : (import.meta.env.VITE_API_URL || 'http://localhost:5004/api');
 
 // Importar autenticação simples temporária
 import { simpleAuth } from './simple-auth';
@@ -66,11 +67,16 @@ class ApiService {
 
   async getSubmissions(page = 1, limit = 50) {
     try {
-      const response = await fetch(`${API_BASE_URL}/forms/submissions?page=${page}&limit=${limit}`, {
+      // Try using the individual Netlify function first
+      const response = await fetch(`/.netlify/functions/submissions?page=${page}&limit=${limit}`, {
         headers: this.getHeaders()
       });
 
-      return this.handleResponse(response);
+      if (!response.ok) {
+        throw new Error('Erro ao buscar submissões');
+      }
+
+      return response.json();
     } catch (error) {
       console.log('⚠️ Erro ao buscar submissões, usando dados mock:', error);
       return fallbackService.getMockSubmissions();
@@ -79,11 +85,16 @@ class ApiService {
 
   async getStats() {
     try {
-      const response = await fetch(`${API_BASE_URL}/forms/stats`, {
+      // Try using the individual Netlify function first
+      const response = await fetch(`/.netlify/functions/stats`, {
         headers: this.getHeaders()
       });
 
-      return this.handleResponse(response);
+      if (!response.ok) {
+        throw new Error('Erro ao buscar estatísticas');
+      }
+
+      return response.json();
     } catch (error) {
       console.log('⚠️ Erro ao buscar estatísticas, usando dados mock:', error);
       return fallbackService.getMockStats();
